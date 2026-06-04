@@ -63,7 +63,7 @@ def create_organization(
     db.refresh(org)
     return org
 
-@router.get("/{x_organization_id}/users", response_model=List[Dict[str, Any]])
+@router.get("/users", response_model=List[Dict[str, Any]])
 def get_organization_users(
     db: Session = Depends(get_db),
     org_ctx: OrganizationUser = Depends(RoleChecker(["CLIENT_OWNER", "CLIENT_EXECUTIVE", "CONSULTANT"]))
@@ -87,7 +87,7 @@ def get_organization_users(
         for org_user, user in results
     ]
 
-@router.post("/{x_organization_id}/users", status_code=status.HTTP_201_CREATED)
+@router.post("/users", status_code=status.HTTP_201_CREATED)
 def add_user_to_organization(
     member_in: OrganizationAddUser,
     db: Session = Depends(get_db),
