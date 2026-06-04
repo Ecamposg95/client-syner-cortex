@@ -6,13 +6,15 @@ The platform turns unstructured internal documentation, processes, and corporate
 
 ---
 
-## Key Features
+## SaaS Product Modules (18 Modules Architecture)
 
-1. **Cortex Vault:** Drag-and-drop secure document parsing (PDF, TXT, MD) and semantic RAG database chunking.
-2. **Cortex Chat:** Conversational workspace agent retrieving internal documentation with expandable citations.
-3. **Cortex Diagnose:** 360-degree questionnaire assessing Commercial, Operations, Administration, HR, and Tech, generating SWOT matrices and strategic advice.
-4. **Cortex Roadmap:** Action items backlogs organized in 30, 60, and 90-day implementation horizons.
-5. **Cortex Reports:** Boardroom-ready executive brief compiler, previewer, and copy/print utility.
+Syner Cortex is designed around an 18-module product catalogue, executed across four development phases:
+- **Phase 1 (MVP Functional):** Cortex Core, Cortex Vault, Cortex Chat, Cortex Diagnose, Cortex Insights, Cortex Roadmap, Cortex Reports. (Implemented)
+- **Phase 2 (Consulting Core):** Cortex Agents (specialized strategic agents), Cortex KPI Intelligence, Cortex Boardroom dashboard, Cortex Client Portal, Cortex Playbooks.
+- **Phase 3 (Enterprise SaaS):** Cortex Benchmark, Cortex Automations, Cortex Integrations, Cortex Governance, Cortex Billing & Plans.
+- **Phase 4 (Investments & Startups):** Cortex Data Room (investor reviews).
+
+*For a detailed module-by-module breakdown and cases of use, refer to the [Full Modules Registry](file:///home/cto/Devs/syner-cortex/docs/product/modules.md).*
 
 ---
 
