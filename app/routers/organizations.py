@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict, Any
 from app.database import get_db
 from app.models.models import Organization, OrganizationUser, User
 from app.schemas.schemas import OrganizationCreate, OrganizationOut, OrganizationUserOut, OrganizationAddUser
@@ -86,8 +86,6 @@ def get_organization_users(
         }
         for org_user, user in results
     ]
-
-from typing import Dict, Any
 
 @router.post("/{x_organization_id}/users", status_code=status.HTTP_201_CREATED)
 def add_user_to_organization(
