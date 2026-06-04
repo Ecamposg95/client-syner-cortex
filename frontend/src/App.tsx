@@ -3,12 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Vault } from './pages/Vault';
-import { Chat } from './pages/Chat';
-import { Diagnose } from './pages/Diagnose';
-import { Roadmap } from './pages/Roadmap';
-import { Reports } from './pages/Reports';
+// New Syner Hub Views
+import { Overview } from './components/views/Overview';
+import { KPIs } from './components/views/KPIs';
+import { RoadmapView } from './components/views/RoadmapView';
+import { Deliverables } from './components/views/Deliverables';
+import { Changelog } from './components/views/Changelog';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
 // Guard component for authenticated private views
@@ -64,36 +64,20 @@ export const App: React.FC = () => {
           }
         />
 
-        {/* PRIVATE ROUTE CONFIGURATIONS */}
+        {/* PRIVATE ROUTE CONFIGURATIONS (Syner Hub) */}
         <Route
           path="/dashboard"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <Overview />
             </PrivateRoute>
           }
         />
         <Route
-          path="/vault"
+          path="/kpis"
           element={
             <PrivateRoute>
-              <Vault />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <PrivateRoute>
-              <Chat />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/diagnose"
-          element={
-            <PrivateRoute>
-              <Diagnose />
+              <KPIs />
             </PrivateRoute>
           }
         />
@@ -101,15 +85,23 @@ export const App: React.FC = () => {
           path="/roadmap"
           element={
             <PrivateRoute>
-              <Roadmap />
+              <RoadmapView />
             </PrivateRoute>
           }
         />
         <Route
-          path="/reports"
+          path="/entregables"
           element={
             <PrivateRoute>
-              <Reports />
+              <Deliverables />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/bitacora"
+          element={
+            <PrivateRoute>
+              <Changelog />
             </PrivateRoute>
           }
         />

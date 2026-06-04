@@ -22,8 +22,8 @@ export const Login: React.FC = () => {
 
   return (
     <AuthLayout>
-      <h3 className="font-display font-bold text-xl text-white text-center mb-6">
-        Sign In to Your Workspace
+      <h3 className="font-bold text-xl text-white text-center mb-6">
+        Acceso a Syner Hub
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -35,8 +35,8 @@ export const Login: React.FC = () => {
         )}
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">
-            Email Address
+          <label className="block text-xs font-medium mb-1.5 pl-1" style={{ color: 'var(--dark-muted)' }}>
+            Correo electrónico
           </label>
           <input
             type="email"
@@ -45,13 +45,17 @@ export const Login: React.FC = () => {
             placeholder="name@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm transition-all"
+            className="w-full p-3 rounded-xl text-white text-sm transition-all outline-none"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">
-            Password
+          <label className="block text-xs font-medium mb-1.5 pl-1" style={{ color: 'var(--dark-muted)' }}>
+            Contraseña
           </label>
           <input
             type="password"
@@ -60,31 +64,36 @@ export const Login: React.FC = () => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm transition-all"
+            className="w-full p-3 rounded-xl text-white text-sm transition-all outline-none"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full p-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 font-semibold text-white text-sm shadow-glow hover:shadow-lg transition-all duration-300 active:scale-98 flex items-center justify-center space-x-2 disabled:opacity-60"
+          className="w-full p-3 rounded-xl font-semibold text-white text-sm transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-60 shadow-accent"
+          style={{ background: 'linear-gradient(135deg, var(--accent-strong), var(--accent))' }}
         >
           {isLoading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
-              <span>Signing In...</span>
+              <span>Iniciando sesión...</span>
             </>
           ) : (
-            <span>Sign In</span>
+            <span>Entrar a plataforma</span>
           )}
         </button>
       </form>
 
       <div className="mt-6 text-center">
-        <p className="text-xs text-slate-400">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-violet-400 hover:text-violet-300 hover:underline font-medium">
-            Create Account
+        <p className="text-xs" style={{ color: 'var(--dark-muted)' }}>
+          ¿No tienes acceso?{' '}
+          <Link to="/register" className="font-medium hover:underline" style={{ color: 'var(--accent-bright)' }}>
+            Crear cuenta
           </Link>
         </p>
       </div>

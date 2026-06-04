@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
+import { Badge } from '../ui/Badge';
+import { ProgressBar } from '../ui/ProgressBar';
+import { project } from '../../data/mockData';
 import {
-  LayoutDashboard,
-  FolderKanban,
-  MessageSquare,
-  Activity,
-  Milestone,
-  FileText,
+  LayoutGrid,
+  TrendingUp,
+  Calendar,
+  FolderClosed,
+  Clock,
   ChevronDown,
   LogOut,
   Building,
   Menu,
   X,
   Plus,
-  Loader2
+  Loader2,
+  Bell,
+  Settings,
+  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -25,10 +30,9 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, organizations, currentOrgRelation, logout, selectOrganization } = useAuthStore();
   const { workspaces, activeWorkspace, selectWorkspace, createWorkspace, fetchWorkspaces, isLoading } = useWorkspaceStore();
-  
+
   const navigate = useNavigate();
-  const location = useLocation();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
@@ -39,7 +43,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   useEffect(() => {
     if (currentOrgRelation) {
-      // Re-fetch workspaces when organization changes
       fetchWorkspaces();
     }
   }, [currentOrgRelation, fetchWorkspaces]);
@@ -52,11 +55,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
-
     setIsCreatingWorkspace(true);
     const success = await createWorkspace(newWorkspaceName, newWorkspaceDesc);
     setIsCreatingWorkspace(false);
-    
     if (success) {
       setNewWorkspaceName('');
       setNewWorkspaceDesc('');
@@ -65,97 +66,101 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   };
 
   const navItems = [
-    { name: 'Boardroom', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Cortex Vault', path: '/vault', icon: FolderKanban },
-    { name: 'Cortex Chat', path: '/chat', icon: MessageSquare },
-    { name: 'Cortex Diagnose', path: '/diagnose', icon: Activity },
-    { name: 'Cortex Roadmap', path: '/roadmap', icon: Milestone },
-    { name: 'Executive Reports', path: '/reports', icon: FileText },
+    { name: 'Overview',     path: '/dashboard',   icon: LayoutGrid },
+    { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
+    { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
+    { name: 'Entregables',  path: '/entregables', icon: FolderClosed },
+    { name: 'Bitácora',     path: '/bitacora',    icon: Clock },
   ];
 
   return (
-    <div className="min-h-screen bg-[#080B11] text-[#F8FAFC] flex font-sans">
-      
-      {/* BACKGROUND GLOW BLOBS */}
-      <div className="bg-blob-violet top-10 left-10" />
-      <div className="bg-blob-indigo bottom-10 right-10" />
+    <div className="min-h-screen flex font-sans" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
 
-      {/* MOBILE HEADER BAR */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0E1524]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 z-40">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow-glow">
-            SC
+      {/* ── MOBILE TOP BAR ── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-40"
+           style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-xs"
+               style={{ background: 'var(--accent)' }}>
+            SH
           </div>
-          <span className="font-display font-bold text-lg tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-            SYNER CORTEX
+          <span className="font-bold text-base tracking-wide" style={{ color: 'var(--ink)' }}>
+            Syner Hub
           </span>
         </div>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5"
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: 'var(--muted)' }}
         >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          {isSidebarOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
-      {/* COLLAPSIBLE SIDEBAR */}
+      {/* ── SIDEBAR (200px) ── */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 bottom-0 z-50 w-72 bg-[#0C1220]/95 lg:bg-[#0C1220]/60 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300 transform ${
+        className={`fixed lg:sticky top-0 left-0 bottom-0 z-50 w-[220px] flex flex-col transition-transform duration-300 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:h-screen pt-16 lg:pt-0`}
+        } lg:translate-x-0 lg:h-screen pt-14 lg:pt-0`}
+        style={{
+          background: 'var(--surface-2)',
+          borderRight: '1px solid var(--border)',
+        }}
       >
-        {/* LOGO SECTION */}
-        <div className="p-6 border-b border-white/5 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-pink-500 flex items-center justify-center font-bold text-white shadow-glow">
-            SC
+        {/* Logo */}
+        <div className="p-5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--border)' }}>
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-extrabold text-white text-sm"
+               style={{ background: 'linear-gradient(135deg, var(--accent-strong), var(--accent))' }}>
+            SH
           </div>
           <div>
-            <h1 className="font-display font-extrabold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">
-              Syner Cortex
+            <h1 className="font-extrabold text-base tracking-wide" style={{ color: 'var(--ink)' }}>
+              Syner Hub
             </h1>
-            <span className="text-[10px] text-violet-400 font-medium tracking-widest uppercase">
-              AI OS Consulting
+            <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
+              Transformación
             </span>
           </div>
         </div>
 
-        {/* ORGANIZATION SELECTOR */}
-        <div className="p-4 border-b border-white/5 relative">
-          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest block mb-2 px-1">
-            Active Tenant
+        {/* Organization Selector */}
+        <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--border)' }}>
+          <label className="font-mono text-[9px] uppercase tracking-widest block mb-1.5 px-1"
+                 style={{ color: 'var(--muted-2)' }}>
+            Organización
           </label>
           <button
-            onClick={() => {
-              setIsOrgDropdownOpen(!isOrgDropdownOpen);
-              setIsWorkspaceDropdownOpen(false);
+            onClick={() => { setIsOrgDropdownOpen(!isOrgDropdownOpen); setIsWorkspaceDropdownOpen(false); }}
+            className="w-full flex items-center justify-between p-2 rounded-lg text-left text-sm font-medium transition-all duration-200"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--ink-2)',
             }}
-            className="w-full flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-violet-500/30 text-left transition-all duration-200"
           >
-            <div className="flex items-center space-x-2.5 truncate">
-              <Building size={16} className="text-violet-400 flex-shrink-0" />
-              <span className="font-medium text-sm text-slate-200 truncate">
-                {currentOrgRelation?.organization?.name || 'Loading organization...'}
-              </span>
+            <div className="flex items-center gap-2 truncate">
+              <Building size={14} style={{ color: 'var(--accent)' }} />
+              <span className="truncate">{currentOrgRelation?.organization?.name || 'Cargando...'}</span>
             </div>
-            <ChevronDown size={16} className={`text-slate-400 transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
           </button>
 
           {isOrgDropdownOpen && (
-            <div className="absolute top-[calc(100%-8px)] left-4 right-4 bg-[#141C2E] border border-white/10 rounded-lg shadow-xl py-1 z-30 max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-4 right-4 rounded-lg shadow-float py-1 z-30 max-h-48 overflow-y-auto"
+                 style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               {organizations.map((relation) => (
                 <button
                   key={relation.organization_id}
-                  onClick={() => {
-                    selectOrganization(relation.organization_id);
-                    setIsOrgDropdownOpen(false);
+                  onClick={() => { selectOrganization(relation.organization_id); setIsOrgDropdownOpen(false); }}
+                  className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-[var(--accent-tint)]"
+                  style={{
+                    color: relation.organization_id === currentOrgRelation?.organization_id ? 'var(--accent-strong)' : 'var(--ink-2)',
+                    fontWeight: relation.organization_id === currentOrgRelation?.organization_id ? 600 : 400,
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors ${
-                    relation.organization_id === currentOrgRelation?.organization_id ? 'text-violet-400 font-semibold' : 'text-slate-300'
-                  }`}
                 >
                   {relation.organization.name}
-                  <span className="block text-[10px] text-slate-500 font-normal">
-                    Role: {relation.role}
+                  <span className="block font-mono text-[9px] uppercase" style={{ color: 'var(--muted-2)' }}>
+                    {relation.role}
                   </span>
                 </button>
               ))}
@@ -163,73 +168,69 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           )}
         </div>
 
-        {/* WORKSPACE SELECTOR */}
-        <div className="p-4 border-b border-white/5 relative">
-          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest block mb-2 px-1">
-            Workspace Project
+        {/* Workspace Selector */}
+        <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--border)' }}>
+          <label className="font-mono text-[9px] uppercase tracking-widest block mb-1.5 px-1"
+                 style={{ color: 'var(--muted-2)' }}>
+            Proyecto
           </label>
           <button
-            onClick={() => {
-              setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen);
-              setIsOrgDropdownOpen(false);
+            onClick={() => { setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen); setIsOrgDropdownOpen(false); }}
+            className="w-full flex items-center justify-between p-2 rounded-lg text-left text-sm font-medium transition-all duration-200"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--ink-2)',
             }}
-            className="w-full flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-indigo-500/30 text-left transition-all duration-200"
           >
-            <div className="flex items-center space-x-2.5 truncate">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
-              <span className="font-medium text-sm text-slate-200 truncate">
-                {activeWorkspace ? activeWorkspace.name : 'No Workspaces Found'}
-              </span>
+            <div className="flex items-center gap-2 truncate">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--accent)' }} />
+              <span className="truncate">{activeWorkspace ? activeWorkspace.name : 'Sin proyectos'}</span>
             </div>
-            <ChevronDown size={16} className={`text-slate-400 transition-transform ${isWorkspaceDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`transition-transform ${isWorkspaceDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
           </button>
 
           {isWorkspaceDropdownOpen && (
-            <div className="absolute top-[calc(100%-8px)] left-4 right-4 bg-[#141C2E] border border-white/10 rounded-lg shadow-xl py-1 z-30 max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-4 right-4 rounded-lg shadow-float py-1 z-30 max-h-48 overflow-y-auto"
+                 style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               {workspaces.map((w) => (
                 <button
                   key={w.id}
-                  onClick={() => {
-                    selectWorkspace(w.id);
-                    setIsWorkspaceDropdownOpen(false);
+                  onClick={() => { selectWorkspace(w.id); setIsWorkspaceDropdownOpen(false); }}
+                  className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-[var(--accent-tint)]"
+                  style={{
+                    color: activeWorkspace && w.id === activeWorkspace.id ? 'var(--accent-strong)' : 'var(--ink-2)',
+                    fontWeight: activeWorkspace && w.id === activeWorkspace.id ? 600 : 400,
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors ${
-                    activeWorkspace && w.id === activeWorkspace.id ? 'text-indigo-400 font-semibold' : 'text-slate-300'
-                  }`}
                 >
                   {w.name}
                 </button>
               ))}
-              <div className="border-t border-white/5 mt-1 pt-1">
+              <div style={{ borderTop: '1px solid var(--border)' }} className="mt-1 pt-1">
                 <button
-                  onClick={() => {
-                    setIsWorkspaceDropdownOpen(false);
-                    setShowNewWorkspaceModal(true);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-white/5 flex items-center space-x-1"
+                  onClick={() => { setIsWorkspaceDropdownOpen(false); setShowNewWorkspaceModal(true); }}
+                  className="w-full text-left px-3 py-2 text-xs flex items-center gap-1 transition-colors hover:bg-[var(--accent-tint)]"
+                  style={{ color: 'var(--muted)' }}
                 >
                   <Plus size={12} />
-                  <span>Create Workspace</span>
+                  <span>Crear proyecto</span>
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* NAVIGATION LINKS */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-violet-600/20 to-indigo-500/10 text-white border-l-2 border-violet-500 shadow-glow'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                  }`
+                  `sidebar-tab ${isActive ? 'sidebar-tab--active' : ''}`
                 }
               >
                 <Icon size={18} />
@@ -239,97 +240,154 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           })}
         </nav>
 
-        {/* FOOTER USER PROFILE */}
-        <div className="p-4 border-t border-white/5 bg-[#0A0E1A]/40 flex items-center justify-between">
-          <div className="flex items-center space-x-3 truncate">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center font-bold text-xs text-white">
+        {/* Footer User */}
+        <div className="p-4 flex items-center justify-between" style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white"
+                 style={{ background: 'linear-gradient(135deg, var(--accent-strong), var(--accent))' }}>
               {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div className="truncate">
-              <p className="text-xs font-semibold text-white truncate">
-                {user?.full_name || 'Loading user...'}
+              <p className="text-xs font-semibold truncate" style={{ color: 'var(--ink)' }}>
+                {user?.full_name || 'Cargando...'}
               </p>
-              <p className="text-[10px] text-slate-500 truncate">
+              <p className="font-mono text-[9px] truncate" style={{ color: 'var(--muted-2)' }}>
                 {user?.email || ''}
               </p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            title="Log Out"
-            className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-white/5 transition-colors"
+            title="Cerrar sesión"
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: 'var(--muted)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--neg)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
           >
             <LogOut size={16} />
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTAINER CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0 pt-16 lg:pt-0 overflow-y-auto">
-        <div className="flex-1 p-6 md:p-10 max-w-7xl w-full mx-auto">
+      {/* ── MAIN CONTENT ── */}
+      <main className="flex-1 flex flex-col min-w-0 pt-14 lg:pt-0 overflow-y-auto">
+        {/* Header Bar */}
+        <header className="hidden lg:flex items-center justify-between px-8 py-4"
+                style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <div>
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--muted-2)' }}>
+              <span>Workspace</span>
+              <ChevronRight size={12} />
+              <span style={{ color: 'var(--muted)' }}>{project.client}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-1">
+              <h2 className="font-extrabold text-xl" style={{ color: 'var(--ink)' }}>
+                {project.name}
+              </h2>
+              <span className="font-mono text-xs" style={{ color: 'var(--muted-2)' }}>· {project.quarter}</span>
+              <Badge variant="active" label={project.status} />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col items-end mr-2">
+              <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
+                Progreso global
+              </span>
+              <span className="font-bold text-sm" style={{ color: 'var(--accent-strong)' }}>
+                {project.progress}%
+              </span>
+            </div>
+            <div className="w-32">
+              <ProgressBar percent={project.progress} />
+            </div>
+            <button className="p-2 rounded-lg transition-colors" style={{ color: 'var(--muted)' }}>
+              <Bell size={18} />
+            </button>
+            <button className="p-2 rounded-lg transition-colors" style={{ color: 'var(--muted)' }}>
+              <Settings size={18} />
+            </button>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <div className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </div>
       </main>
 
-      {/* NEW WORKSPACE MODAL */}
+      {/* ── NEW WORKSPACE MODAL ── */}
       {showNewWorkspaceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div className="w-full max-w-md rounded-xl p-6 shadow-float relative"
+               style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <button
               onClick={() => setShowNewWorkspaceModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 transition-colors"
+              style={{ color: 'var(--muted)' }}
             >
               <X size={20} />
             </button>
-            <h3 className="font-display font-bold text-xl text-white mb-4">
-              Create New Workspace
+            <h3 className="font-bold text-lg mb-4" style={{ color: 'var(--ink)' }}>
+              Crear nuevo proyecto
             </h3>
             <form onSubmit={handleCreateWorkspace} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Workspace Name
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>
+                  Nombre del proyecto
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Q3 Sales Consulting"
+                  placeholder="Ej. Transformación Q4 2026"
                   value={newWorkspaceName}
                   onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm"
+                  className="w-full p-2.5 rounded-lg text-sm transition-all outline-none"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--ink)',
+                  }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                  Description (Optional)
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>
+                  Descripción (opcional)
                 </label>
                 <textarea
-                  placeholder="Purpose of this workspace..."
+                  placeholder="Propósito del proyecto..."
                   value={newWorkspaceDesc}
                   onChange={(e) => setNewWorkspaceDesc(e.target.value)}
                   rows={3}
-                  className="w-full p-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm resize-none"
+                  className="w-full p-2.5 rounded-lg text-sm resize-none transition-all outline-none"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--ink)',
+                  }}
                 />
               </div>
-              <div className="flex justify-end space-x-3 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowNewWorkspaceModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg bg-white/5 hover:bg-white/10"
+                  className="px-4 py-2 text-xs font-medium rounded-lg transition-colors"
+                  style={{ color: 'var(--muted)', background: 'var(--surface-2)' }}
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingWorkspace}
-                  className="px-4 py-2 text-xs font-semibold text-white rounded-lg bg-violet-600 hover:bg-violet-500 flex items-center space-x-1 disabled:opacity-55"
+                  className="px-4 py-2 text-xs font-semibold text-white rounded-lg flex items-center gap-1 disabled:opacity-50"
+                  style={{ background: 'var(--accent)' }}
                 >
                   {isCreatingWorkspace ? (
                     <>
                       <Loader2 size={12} className="animate-spin" />
-                      <span>Creating...</span>
+                      <span>Creando...</span>
                     </>
                   ) : (
-                    <span>Create</span>
+                    <span>Crear</span>
                   )}
                 </button>
               </div>
@@ -337,7 +395,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </div>
         </div>
       )}
-
     </div>
   );
 };

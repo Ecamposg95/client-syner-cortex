@@ -43,6 +43,10 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+def get_current_organization_id(x_organization_id: int = Header(..., alias="X-Organization-ID")) -> int:
+    """Return the organization id from header for simple endpoints."""
+    return x_organization_id
+
 def get_organization_context(
     x_organization_id: int = Header(..., alias="X-Organization-ID"),
     db: Session = Depends(get_db),

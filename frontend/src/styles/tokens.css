@@ -1,0 +1,232 @@
+/* ======================================================
+   SYNER HUB — Design Token System
+   Official brand variables for Grupo Syner (CDMX, 2003)
+   ====================================================== */
+
+/* ---------- Light Mode (Default Surfaces) ---------- */
+:root {
+  /* Fondos */
+  --bg:             #fafbfc;
+  --surface:        #ffffff;
+  --surface-2:      #f4f6f8;
+
+  /* Texto */
+  --ink:            #0d1418;
+  --ink-2:          #2d383e;
+  --muted:          #5c6a71;
+  --muted-2:        #8fa0a8;
+
+  /* Bordes */
+  --border:         #e6ecef;
+  --border-strong:  #c2d1d8;
+
+  /* Acento principal — Teal/Cian Syner */
+  --accent:         #2c9aa6;
+  --accent-strong:  #1e6c75;
+  --accent-bright:  #62a0aa;
+  --accent-tint:    #f0f8f9;
+  --accent-glow:    rgba(44, 154, 166, 0.15);
+
+  /* Estados */
+  --pos:            #4ca374;
+  --warn:           #c29938;
+  --neg:            #e05252;
+
+  /* Dark mode tokens (for hero/sidebar) */
+  --dark-bg:        #0d1418;
+  --dark-bg-2:      #080c0f;
+  --dark-surface:   #141c22;
+  --dark-surface-2: #19232a;
+  --dark-border:    #1e2930;
+  --dark-border-2:  #283741;
+  --dark-fg:        #f3f6f7;
+  --dark-muted:     #8496a0;
+  --dark-muted-2:   #5c6c75;
+
+  /* Spacing rhythm */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* Shadows */
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.12);
+}
+
+/* ---------- Glassmorphism (Dark Panels) ---------- */
+.atlas-glass {
+  background: rgba(20, 28, 34, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 20px 50px -15px rgba(0,0,0,0.4);
+}
+
+/* ---------- Component Utility Classes ---------- */
+
+/* KPI Card */
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.kpi-card:hover {
+  border-color: var(--accent-bright);
+  box-shadow: var(--shadow-card);
+}
+.kpi-card__value {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.kpi-card__label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 9px;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.kpi-card__delta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
+.kpi-card__delta--up {
+  color: var(--pos);
+}
+.kpi-card__delta--down {
+  color: var(--warn);
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-badge--active {
+  background: rgba(76, 163, 116, 0.10);
+  color: #4ca374;
+  border: 1px solid rgba(76, 163, 116, 0.20);
+}
+.status-badge--completed {
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+  border: 1px solid rgba(44, 154, 166, 0.20);
+}
+.status-badge--pending {
+  background: var(--border);
+  color: var(--muted);
+  border: 1px solid transparent;
+}
+.status-badge--risk {
+  background: rgba(194, 153, 56, 0.10);
+  color: #c29938;
+  border: 1px solid rgba(194, 153, 56, 0.20);
+}
+
+/* Pulsing dot for active badges */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  70%  { box-shadow: 0 0 0 6px transparent; opacity: 0.6; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+}
+
+/* Progress Bar */
+.progress-track {
+  background: var(--border);
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar Navigation Tab */
+.sidebar-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+.sidebar-tab:hover {
+  background: rgba(230, 236, 239, 0.4);
+  color: var(--ink-2);
+  transform: translateX(2px);
+}
+.sidebar-tab--active {
+  background: var(--accent-tint);
+  color: var(--accent-strong);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.sidebar-tab--active:hover {
+  background: var(--accent-tint);
+  transform: none;
+}
+
+/* Browser Chrome Mockup */
+.browser-chrome {
+  height: 32px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.browser-chrome__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-bright);
+}

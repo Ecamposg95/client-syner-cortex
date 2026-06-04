@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.database import engine, Base
-from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit
+from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi
 
 # Initialize database tables on startup (especially useful for SQLite out-of-the-box setup)
 Base.metadata.create_all(bind=engine)
@@ -83,7 +83,8 @@ app.include_router(chat.router, prefix="/api")
 app.include_router(diagnoses.router, prefix="/api")
 app.include_router(roadmaps.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
-app.include_router(audit.router, prefix="/api")
+app.include_router(agents.router, prefix="/api")
+app.include_router(kpi.router, prefix="/api")
 
 @app.get("/api/health", tags=["health"])
 def health_check():

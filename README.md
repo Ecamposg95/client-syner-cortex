@@ -1,18 +1,19 @@
-# Syner Cortex - AI Consulting Operating System
+# Syner Hub - Transformation Operating System
 
-**Syner Cortex** is a multi-tenant SaaS business intelligence and AI-assisted consulting platform designed for startups, SMEs, corporate executives, and Syner consulting agents. 
+**Syner Hub** is a multi-tenant SaaS business intelligence and transformation platform designed for clients of Grupo Syner. 
 
 The platform turns unstructured internal documentation, processes, and corporate KPIs into actionable diagnostics, cited semantic answers, and execution plans using enterprise RAG and structured decision matrices.
 
 ---
 
-## SaaS Product Modules (18 Modules Architecture)
+## SaaS Product Modules (Syner Hub Architecture)
 
-Syner Cortex is designed around an 18-module product catalogue, executed across four development phases:
-- **Phase 1 (MVP Functional):** Cortex Core, Cortex Vault, Cortex Chat, Cortex Diagnose, Cortex Insights, Cortex Roadmap, Cortex Reports. (Implemented)
-- **Phase 2 (Consulting Core):** Cortex Agents (specialized strategic agents), Cortex KPI Intelligence, Cortex Boardroom dashboard, Cortex Client Portal, Cortex Playbooks.
-- **Phase 3 (Enterprise SaaS):** Cortex Benchmark, Cortex Automations, Cortex Integrations, Cortex Governance, Cortex Billing & Plans.
-- **Phase 4 (Investments & Startups):** Cortex Data Room (investor reviews).
+Syner Hub is designed around a client-facing portal focusing on real-time transformation visibility:
+- **Overview:** Executive boardroom dashboard with real-time strategic alignment.
+- **KPIs:** Detailed matrix of operational, financial, and HR metrics.
+- **Roadmap:** Visual 30/60/90 days timeline for project phases.
+- **Entregables:** Centralized vault for downloading executive reports and files.
+- **Bitácora:** Traceable, auditable log of decisions and agreements.
 
 *For a detailed module-by-module breakdown and cases of use, refer to the [Full Modules Registry](file:///home/cto/Devs/syner-cortex/docs/product/modules.md).*
 
@@ -98,14 +99,14 @@ OPENAI_API_KEY=your_openai_api_key
   ```
 
 Open your browser at [http://localhost:5173](http://localhost:5173) and log in using the pre-seeded admin user:
-- **Email:** `admin@cortex.com`
+- **Email:** `admin@synerhub.com`
 - **Password:** `password123`
 
 ---
 
 ## Deployment & Builds
 
-Syner Cortex is fully prepared for continuous deployment on **Railway** utilizing **Nixpacks**:
+Syner Hub is fully prepared for continuous deployment on **Railway** utilizing **Nixpacks**:
 - Nixpacks automatically installs Python 3.12 and Node 20.
 - Compiles React SPA code into production static assets.
 - Runs the FastAPI web application, serving both REST API endpoints and fallback catch-all routes.

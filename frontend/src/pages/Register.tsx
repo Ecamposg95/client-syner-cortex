@@ -27,8 +27,8 @@ export const Register: React.FC = () => {
 
   return (
     <AuthLayout>
-      <h3 className="font-display font-bold text-xl text-white text-center mb-6">
-        Create Your Account
+      <h3 className="font-bold text-xl text-white text-center mb-6">
+        Crear cuenta en Syner Hub
       </h3>
 
       {isSuccess ? (
@@ -36,8 +36,8 @@ export const Register: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
             <CheckCircle size={24} />
           </div>
-          <h4 className="font-semibold text-white">Registration Successful!</h4>
-          <p className="text-xs text-slate-400">Redirecting you to login screen...</p>
+          <h4 className="font-semibold text-white">¡Registro exitoso!</h4>
+          <p className="text-xs" style={{ color: 'var(--dark-muted)' }}>Redirigiendo al acceso...</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -49,8 +49,8 @@ export const Register: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">
-              Full Name
+            <label className="block text-xs font-medium mb-1.5 pl-1" style={{ color: 'var(--dark-muted)' }}>
+              Nombre completo
             </label>
             <input
               type="text"
@@ -58,13 +58,17 @@ export const Register: React.FC = () => {
               placeholder="Humberto Villanueva"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm transition-all"
+              className="w-full p-3 rounded-xl text-white text-sm transition-all outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">
-              Email Address
+            <label className="block text-xs font-medium mb-1.5 pl-1" style={{ color: 'var(--dark-muted)' }}>
+              Correo electrónico
             </label>
             <input
               type="email"
@@ -72,13 +76,17 @@ export const Register: React.FC = () => {
               placeholder="name@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm transition-all"
+              className="w-full p-3 rounded-xl text-white text-sm transition-all outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 pl-1">
-              Password
+            <label className="block text-xs font-medium mb-1.5 pl-1" style={{ color: 'var(--dark-muted)' }}>
+              Contraseña
             </label>
             <input
               type="password"
@@ -86,22 +94,27 @@ export const Register: React.FC = () => {
               placeholder="Min. 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-sm transition-all"
+              className="w-full p-3 rounded-xl text-white text-sm transition-all outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full p-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 font-semibold text-white text-sm shadow-glow hover:shadow-lg transition-all duration-300 active:scale-98 flex items-center justify-center space-x-2 disabled:opacity-60"
+            className="w-full p-3 rounded-xl font-semibold text-white text-sm transition-all duration-300 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-60 shadow-accent"
+            style={{ background: 'linear-gradient(135deg, var(--accent-strong), var(--accent))' }}
           >
             {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                <span>Creating Account...</span>
+                <span>Creando cuenta...</span>
               </>
             ) : (
-              <span>Create Account</span>
+              <span>Crear cuenta</span>
             )}
           </button>
         </form>
@@ -109,10 +122,10 @@ export const Register: React.FC = () => {
 
       {!isSuccess && (
         <div className="mt-6 text-center">
-          <p className="text-xs text-slate-400">
-            Already have an account?{' '}
-            <Link to="/login" className="text-violet-400 hover:text-violet-300 hover:underline font-medium">
-              Sign In
+          <p className="text-xs" style={{ color: 'var(--dark-muted)' }}>
+            ¿Ya tienes cuenta?{' '}
+            <Link to="/login" className="font-medium hover:underline" style={{ color: 'var(--accent-bright)' }}>
+              Iniciar sesión
             </Link>
           </p>
         </div>
