@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-brand-500 selection:text-white;
+    background-color: #080B11; /* Default to sleek dark theme style body */
+    color: #F8FAFC;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom premium styling classes */
+.glass-panel {
+  background: rgba(21, 29, 48, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(21, 29, 48, 0.85);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-indigo-300 to-pink-400 font-display;
+}
+
+.glow-btn {
+  @apply relative overflow-hidden transition-all duration-300 active:scale-95;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.glow-btn:hover {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* Background gradient blobs for sleek aesthetics */
+.bg-blob-violet {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0) 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.bg-blob-indigo {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0) 70%);
+  border-radius: 50%;
+  filter: blur(50px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Markdown render styling for cited texts */
+.cortex-markdown {
+  @apply text-slate-300 leading-relaxed;
+}
+.cortex-markdown p {
+  @apply mb-4;
+}
+.cortex-markdown strong {
+  @apply text-white font-semibold;
+}
+.cortex-markdown ul {
+  @apply list-disc list-inside mb-4 pl-2;
+}
+.cortex-markdown li {
+  @apply mb-1;
+}

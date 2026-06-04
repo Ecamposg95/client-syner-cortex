@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.*
+!.env.example
+
+# Node / Frontend
+node_modules/
+dist/
+dist-frontend/
+.eslintcache
+*.local
+
+# Database / Local files
+*.db
+*.sqlite
+uploads/
+/app/uploads/
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+.claude/
