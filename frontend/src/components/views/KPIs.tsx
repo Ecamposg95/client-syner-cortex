@@ -1,88 +1,86 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../ui/Card';
-import { ProgressBar } from '../ui/ProgressBar';
-import { kpiDetails, KPIDetail } from '../../data/mockData';
-import { Filter } from 'lucide-react';
+import { Loader2, Inbox, TrendingUp } from 'lucide-react';
+import apiClient from '../../api/client';
 
-type AreaFilter = 'Todos' | 'Finanzas' | 'Operaciones' | 'RRHH';
+interface KpiItem {
+  id: number;
+  name: string;
+  value: string | number;
+  timestamp: string;
+}
+
+const fmtTimestamp = (ts: string): string => {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return ts;
+  }
+};
 
 export const KPIs: React.FC = () => {
-  const [filter, setFilter] = useState<AreaFilter>('Todos');
+  const [kpis, setKpis] = useState<KpiItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredData = filter === 'Todos' 
-    ? kpiDetails 
-    : kpiDetails.filter(kpi => kpi.area === filter);
+  useEffect(() => {
+    apiClient
+      .get<KpiItem[]>('/kpi')
+      .then((res) => setKpis(res.data ?? []))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-[var(--accent)]" /></div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-bold text-2xl">Métricas Detalladas</h2>
-          <p className="text-sm text-[var(--muted)] mt-1">Seguimiento de línea base vs. actual</p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Filter size={16} className="text-[var(--muted)]" />
-          <div className="flex bg-[var(--surface)] border border-[var(--border)] rounded-lg p-1">
-            {(['Todos', 'Finanzas', 'Operaciones', 'RRHH'] as AreaFilter[]).map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  filter === f 
-                    ? 'bg-[var(--accent-tint)] text-[var(--accent-strong)]' 
-                    : 'text-[var(--muted)] hover:text-[var(--ink)]'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+          <p className="text-sm text-[var(--muted)] mt-1">Indicadores clave de la consultoría</p>
         </div>
       </div>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[var(--surface-2)] text-[var(--muted)] border-b border-[var(--border)]">
-              <tr>
-                <th className="px-6 py-4 font-medium">Indicador</th>
-                <th className="px-6 py-4 font-medium">Área</th>
-                <th className="px-6 py-4 font-medium">Línea Base</th>
-                <th className="px-6 py-4 font-medium">Actual</th>
-                <th className="px-6 py-4 font-medium">Meta</th>
-                <th className="px-6 py-4 font-medium w-1/4">Progreso</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {filteredData.map((kpi) => (
-                <tr key={kpi.id} className="hover:bg-[var(--surface-2)] transition-colors">
-                  <td className="px-6 py-4 font-medium text-[var(--ink)]">{kpi.name}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-mono uppercase bg-[var(--bg)] text-[var(--muted-2)] border border-[var(--border)]">
-                      {kpi.area}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-xs">{kpi.baseline}</td>
-                  <td className="px-6 py-4 font-mono text-xs font-bold text-[var(--ink)]">{kpi.actual}</td>
-                  <td className="px-6 py-4 font-mono text-xs">{kpi.meta}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <ProgressBar percent={kpi.percent} className="flex-1" />
-                      <span className="font-mono text-xs text-[var(--muted)] w-8 text-right">{kpi.percent}%</span>
-                    </div>
-                  </td>
+      {kpis.length === 0 ? (
+        <Card className="p-12 flex flex-col items-center justify-center gap-3 text-center">
+          <Inbox size={40} className="text-[var(--muted-2)]" />
+          <h3 className="font-bold text-lg text-[var(--ink)]">Sin métricas registradas</h3>
+          <p className="text-sm text-[var(--muted)] max-w-md">
+            Aún no se han capturado KPIs para tu organización.
+          </p>
+        </Card>
+      ) : (
+        <Card className="p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-[var(--surface-2)] text-[var(--muted)] border-b border-[var(--border)]">
+                <tr>
+                  <th className="px-6 py-4 font-medium">Indicador</th>
+                  <th className="px-6 py-4 font-medium">Valor</th>
+                  <th className="px-6 py-4 font-medium">Actualizado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {filteredData.length === 0 && (
-            <div className="p-8 text-center text-[var(--muted)]">
-              No hay métricas para esta área.
-            </div>
-          )}
-        </div>
-      </Card>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {kpis.map((kpi) => (
+                  <tr key={kpi.id} className="hover:bg-[var(--surface-2)] transition-colors">
+                    <td className="px-6 py-4 font-medium text-[var(--ink)]">
+                      <span className="inline-flex items-center gap-2">
+                        <TrendingUp size={14} className="text-[var(--accent)]" />
+                        {kpi.name}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-sm font-bold text-[var(--ink)]">{String(kpi.value)}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--muted)]">{fmtTimestamp(kpi.timestamp)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

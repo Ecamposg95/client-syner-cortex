@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.models import User, Organization, OrganizationUser
 from app.security.auth import get_password_hash, verify_password, create_access_token
-from app.schemas.schemas import UserCreate, UserOut, Token
+from app.schemas.schemas import UserCreate, UserOut, Token, LoginRequest, ChangePasswordRequest
 from app.dependencies import get_current_active_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -22,12 +22,15 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="A user with this email address already exists."
         )
 
-    # Hash the password and create the user
+    # Hash the password and create the user.
+    # Self-signup ALWAYS creates an external CLIENT_USER — never a SYNER_CREW.
+    # Internal crew accounts are provisioned only by an existing crew member.
     hashed_pwd = get_password_hash(user_in.password)
     user = User(
         email=user_in.email,
         hashed_password=hashed_pwd,
         full_name=user_in.full_name,
+        user_type="CLIENT_USER",
         is_active=True
     )
     db.add(user)
@@ -72,7 +75,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login-json", response_model=Token)
-def login_json(credentials: UserCreate, db: Session = Depends(get_db)):
+def login_json(credentials: LoginRequest, db: Session = Depends(get_db)):
     """
     Authenticate user via JSON body (Vite React frontend friendly).
     """
@@ -93,4 +96,20 @@ def read_users_me(current_user: User = Depends(get_current_active_user)):
     """
     Get profile information of the currently authenticated user.
     """
+    return current_user
+
+@router.post("/change-password", response_model=UserOut)
+def change_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Set a new password for the authenticated user and clear the
+    must_change_password flag (used for first-login forced rotation).
+    """
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    current_user.must_change_password = False
+    db.commit()
+    db.refresh(current_user)
     return current_user

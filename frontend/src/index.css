@@ -20,3 +20,15 @@
     color: #ffffff;
   }
 }
+
+.theme-syner-crew {
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --surface-2: var(--dark-surface-2);
+  --ink: var(--dark-fg);
+  --ink-2: #d1d9dd;
+  --muted: var(--dark-muted);
+  --muted-2: var(--dark-muted-2);
+  --border: var(--dark-border);
+  --border-strong: var(--dark-border-2);
+}

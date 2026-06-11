@@ -1,13 +1,9 @@
-import os
 import datetime
 from typing import Optional, Union, Any
 from jose import jwt
 import bcrypt
 
-# JWT configuration settings
-JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_key_cortex_2026_syner")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours expiration for ease of use
+from app.config import JWT_SECRET, JWT_ALGORITHM as ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """

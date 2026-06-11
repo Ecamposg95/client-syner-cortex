@@ -1,7 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, func
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
+from app.database import Base
 
 class KPI(Base):
     __tablename__ = "kpis"

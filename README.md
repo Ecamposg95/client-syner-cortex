@@ -39,6 +39,17 @@ Syner Hub is designed around a client-facing portal focusing on real-time transf
 
 ---
 
+## RBAC & Dual-User Architecture
+
+Syner Hub implements a strict data isolation model dividing the platform into two distinct experiences:
+
+- **`SYNER_CREW`:** Internal consultants and operators. They have access to raw data, AI diagnosis tools, internal playbooks, and global analytics.
+- **`CLIENT_USER`:** External clients. They only have access to their assigned organization and can exclusively see deliverables, tasks, and roadmaps explicitly marked as `CLIENT_VISIBLE`, `CLIENT_SHARED`, or `APPROVED` by Syner partners.
+
+For a full breakdown of the object-level visibility and internal/external role matrices, refer to the [RBAC Architecture Context](file:///home/cto/Devs/syner-cortex/context/rbac_architecture.md).
+
+---
+
 ## Directory Structure
 
 ```text

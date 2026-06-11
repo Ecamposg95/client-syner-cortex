@@ -3,24 +3,31 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Badge } from '../ui/Badge';
-import { ProgressBar } from '../ui/ProgressBar';
-import { project } from '../../data/mockData';
 import {
   LayoutGrid,
   TrendingUp,
   Calendar,
   FolderClosed,
-  Clock,
   ChevronDown,
   LogOut,
   Building,
   Menu,
   X,
   Plus,
+  Building2,
   Loader2,
   Bell,
   Settings,
   ChevronRight,
+  Briefcase,
+  FileSearch,
+  Milestone,
+  AlertTriangle,
+  BookOpen,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  Box
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -40,6 +47,20 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [newWorkspaceDesc, setNewWorkspaceDesc] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+
+  // Crew vs client is driven purely by the authenticated user's type.
+  // It controls both the theme and which navigation modules are visible.
+  const isSynerCrew = user?.user_type === 'SYNER_CREW';
+
+  useEffect(() => {
+    // Apply theme to body
+    if (isSynerCrew) {
+      document.body.classList.add('theme-syner-crew');
+    } else {
+      document.body.classList.remove('theme-syner-crew');
+    }
+    return () => document.body.classList.remove('theme-syner-crew');
+  }, [isSynerCrew]);
 
   useEffect(() => {
     if (currentOrgRelation) {
@@ -65,13 +86,60 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     }
   };
 
-  const navItems = [
-    { name: 'Overview',     path: '/dashboard',   icon: LayoutGrid },
-    { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
-    { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
-    { name: 'Entregables',  path: '/entregables', icon: FolderClosed },
-    { name: 'Bitácora',     path: '/bitacora',    icon: Clock },
+  // Internal Syner Crew: full consulting platform.
+  const crewNavGroups = [
+    {
+      title: 'Consulting Hub (Ejecutivo)',
+      items: [
+        { name: 'Dashboard',    path: '/dashboard',       icon: LayoutGrid },
+        { name: 'Clientes',     path: '/admin/clients',   icon: Building2 },
+        { name: 'Engagements',  path: '/engagements',     icon: Briefcase },
+        { name: 'Toolkits',     path: '/toolkits',        icon: Box },
+        { name: 'Findings',     path: '/findings',        icon: FileSearch },
+        { name: 'Initiatives',  path: '/initiatives',     icon: Milestone },
+      ]
+    },
+    {
+      title: 'Bóveda de Cliente',
+      items: [
+        { name: 'Deliverables', path: '/deliverables',    icon: FolderClosed },
+        { name: 'Decisions',    path: '/decisions',       icon: AlertTriangle },
+      ]
+    },
+    {
+      title: 'Gestión Operativa',
+      items: [
+        { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
+        { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
+        { name: 'Encuestas',    path: '/surveys',     icon: ClipboardList },
+        { name: 'Academia',     path: '/academy',     icon: BookOpen },
+        { name: 'Auditoría',    path: '/auditor',     icon: ClipboardCheck },
+        { name: 'Bitácora',     path: '/bitacora',    icon: Clock },
+      ]
+    }
   ];
+
+  // External Client portal: only finalized, client-facing modules.
+  const clientNavGroups = [
+    {
+      title: 'Mi Empresa',
+      items: [
+        { name: 'Resumen',      path: '/dashboard',       icon: LayoutGrid },
+        { name: 'Entregables',  path: '/deliverables',    icon: FolderClosed },
+        { name: 'Decisiones',   path: '/decisions',       icon: AlertTriangle },
+      ]
+    },
+    {
+      title: 'Seguimiento',
+      items: [
+        { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
+        { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
+        { name: 'Academia',     path: '/academy',     icon: BookOpen },
+      ]
+    }
+  ];
+
+  const navGroups = isSynerCrew ? crewNavGroups : clientNavGroups;
 
   return (
     <div className="min-h-screen flex font-sans" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
@@ -123,47 +191,60 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </div>
         </div>
 
-        {/* Organization Selector */}
+        {/* Organization Selector — crew can switch orgs; clients see a static label
+            for their single organization (no org-switching in the client portal). */}
         <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--border)' }}>
           <label className="font-mono text-[9px] uppercase tracking-widest block mb-1.5 px-1"
                  style={{ color: 'var(--muted-2)' }}>
             Organización
           </label>
-          <button
-            onClick={() => { setIsOrgDropdownOpen(!isOrgDropdownOpen); setIsWorkspaceDropdownOpen(false); }}
-            className="w-full flex items-center justify-between p-2 rounded-lg text-left text-sm font-medium transition-all duration-200"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--ink-2)',
-            }}
-          >
-            <div className="flex items-center gap-2 truncate">
+          {isSynerCrew ? (
+            <>
+              <button
+                onClick={() => { setIsOrgDropdownOpen(!isOrgDropdownOpen); setIsWorkspaceDropdownOpen(false); }}
+                className="w-full flex items-center justify-between p-2 rounded-lg text-left text-sm font-medium transition-all duration-200"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--ink-2)',
+                }}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Building size={14} style={{ color: 'var(--accent)' }} />
+                  <span className="truncate">{currentOrgRelation?.organization?.name || 'Cargando...'}</span>
+                </div>
+                <ChevronDown size={14} className={`transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
+              </button>
+
+              {isOrgDropdownOpen && (
+                <div className="absolute top-full left-4 right-4 rounded-lg shadow-float py-1 z-30 max-h-48 overflow-y-auto"
+                     style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  {organizations.map((relation) => (
+                    <button
+                      key={relation.organization_id}
+                      onClick={() => { selectOrganization(relation.organization_id); setIsOrgDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-[var(--accent-tint)]"
+                      style={{
+                        color: relation.organization_id === currentOrgRelation?.organization_id ? 'var(--accent-strong)' : 'var(--ink-2)',
+                        fontWeight: relation.organization_id === currentOrgRelation?.organization_id ? 600 : 400,
+                      }}
+                    >
+                      {relation.organization.name}
+                      <span className="block font-mono text-[9px] uppercase" style={{ color: 'var(--muted-2)' }}>
+                        {relation.role}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div
+              className="w-full flex items-center gap-2 p-2 rounded-lg text-sm font-medium truncate"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--ink-2)' }}
+            >
               <Building size={14} style={{ color: 'var(--accent)' }} />
               <span className="truncate">{currentOrgRelation?.organization?.name || 'Cargando...'}</span>
-            </div>
-            <ChevronDown size={14} className={`transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
-          </button>
-
-          {isOrgDropdownOpen && (
-            <div className="absolute top-full left-4 right-4 rounded-lg shadow-float py-1 z-30 max-h-48 overflow-y-auto"
-                 style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              {organizations.map((relation) => (
-                <button
-                  key={relation.organization_id}
-                  onClick={() => { selectOrganization(relation.organization_id); setIsOrgDropdownOpen(false); }}
-                  className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-[var(--accent-tint)]"
-                  style={{
-                    color: relation.organization_id === currentOrgRelation?.organization_id ? 'var(--accent-strong)' : 'var(--ink-2)',
-                    fontWeight: relation.organization_id === currentOrgRelation?.organization_id ? 600 : 400,
-                  }}
-                >
-                  {relation.organization.name}
-                  <span className="block font-mono text-[9px] uppercase" style={{ color: 'var(--muted-2)' }}>
-                    {relation.role}
-                  </span>
-                </button>
-              ))}
             </div>
           )}
         </div>
@@ -206,38 +287,49 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                   {w.name}
                 </button>
               ))}
-              <div style={{ borderTop: '1px solid var(--border)' }} className="mt-1 pt-1">
-                <button
-                  onClick={() => { setIsWorkspaceDropdownOpen(false); setShowNewWorkspaceModal(true); }}
-                  className="w-full text-left px-3 py-2 text-xs flex items-center gap-1 transition-colors hover:bg-[var(--accent-tint)]"
-                  style={{ color: 'var(--muted)' }}
-                >
-                  <Plus size={12} />
-                  <span>Crear proyecto</span>
-                </button>
-              </div>
+              {/* Creating projects is a crew/management action — hidden from clients. */}
+              {isSynerCrew && (
+                <div style={{ borderTop: '1px solid var(--border)' }} className="mt-1 pt-1">
+                  <button
+                    onClick={() => { setIsWorkspaceDropdownOpen(false); setShowNewWorkspaceModal(true); }}
+                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-1 transition-colors hover:bg-[var(--accent-tint)]"
+                    style={{ color: 'var(--muted)' }}
+                  >
+                    <Plus size={12} />
+                    <span>Crear proyecto</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `sidebar-tab ${isActive ? 'sidebar-tab--active' : ''}`
-                }
-              >
-                <Icon size={18} />
-                <span>{item.name}</span>
-              </NavLink>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.title}>
+              <h4 className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--muted-2)]">
+                {group.title}
+              </h4>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsSidebarOpen(false)}
+                      className={({ isActive }) =>
+                        `sidebar-tab ${isActive ? 'sidebar-tab--active' : ''}`
+                      }
+                    >
+                      <Icon size={18} />
+                      <span>{item.name}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer User */}
@@ -276,29 +368,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
           <div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--muted-2)' }}>
-              <span>Workspace</span>
+              <span>{currentOrgRelation?.organization?.name || 'Organización'}</span>
               <ChevronRight size={12} />
-              <span style={{ color: 'var(--muted)' }}>{project.client}</span>
+              <span style={{ color: 'var(--muted)' }}>{activeWorkspace ? activeWorkspace.name : 'Sin proyecto'}</span>
             </div>
             <div className="flex items-center gap-3 mt-1">
               <h2 className="font-extrabold text-xl" style={{ color: 'var(--ink)' }}>
-                {project.name}
+                {activeWorkspace ? activeWorkspace.name : (currentOrgRelation?.organization?.name || 'Syner Hub')}
               </h2>
-              <span className="font-mono text-xs" style={{ color: 'var(--muted-2)' }}>· {project.quarter}</span>
-              <Badge variant="active" label={project.status} />
+              <Badge
+                variant={isSynerCrew ? 'active' : 'completed'}
+                label={isSynerCrew ? 'Syner Crew' : 'Portal Cliente'}
+              />
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end mr-2">
+            <div className="flex flex-col items-end mr-1">
               <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
-                Progreso global
+                {currentOrgRelation?.role || ''}
               </span>
-              <span className="font-bold text-sm" style={{ color: 'var(--accent-strong)' }}>
-                {project.progress}%
+              <span className="font-bold text-sm" style={{ color: 'var(--ink-2)' }}>
+                {user?.full_name || ''}
               </span>
-            </div>
-            <div className="w-32">
-              <ProgressBar percent={project.progress} />
             </div>
             <button className="p-2 rounded-lg transition-colors" style={{ color: 'var(--muted)' }}>
               <Bell size={18} />
@@ -309,9 +400,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content — wait for an active organization so org-scoped views
+            don't fire requests without the X-Organization-ID header (avoids 422). */}
         <div className="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+          {currentOrgRelation ? children : (
+            <div className="p-12 flex flex-col items-center justify-center gap-4">
+              <Loader2 size={36} className="animate-spin" style={{ color: 'var(--accent)' }} />
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>Cargando tu organización...</p>
+            </div>
+          )}
         </div>
       </main>
 

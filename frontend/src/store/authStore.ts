@@ -7,6 +7,8 @@ interface User {
   full_name: string;
   is_active: boolean;
   is_superadmin: boolean;
+  user_type: 'SYNER_CREW' | 'CLIENT_USER';
+  must_change_password?: boolean;
 }
 
 interface Organization {

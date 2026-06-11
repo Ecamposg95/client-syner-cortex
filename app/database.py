@@ -1,6 +1,10 @@
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+
+# Load .env early so DATABASE_URL is available before the engine is created.
+load_dotenv()
 
 # Retrieve database URL from environment or fallback to local SQLite for rapid prototyping
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./syner_cortex.db")

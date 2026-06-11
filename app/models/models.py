@@ -20,8 +20,10 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
+    user_type = Column(String, nullable=False, default="CLIENT_USER") # SYNER_CREW or CLIENT_USER
     is_active = Column(Boolean, default=True)
     is_superadmin = Column(Boolean, default=False)
+    must_change_password = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -36,6 +38,7 @@ class Organization(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, index=True, nullable=False)
+    organization_type = Column(String, nullable=False, default="CLIENT") # SYNER or CLIENT
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -50,7 +53,7 @@ class OrganizationUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     organization_id = Column(Integer, ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    role = Column(String, nullable=False, default="CLIENT_VIEWER") # SUPERADMIN, SYNER_ADMIN, CONSULTANT, CLIENT_OWNER, CLIENT_EXECUTIVE, CLIENT_MANAGER, CLIENT_VIEWER
+    role = Column(String, nullable=False, default="CLIENT_VIEWER") # SUPERADMIN, SYNER_ADMIN, SYNER_PARTNER, SYNER_CONSULTANT, SYNER_ANALYST, CLIENT_OWNER, CLIENT_MANAGER, CLIENT_VIEWER
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
@@ -104,6 +107,7 @@ class Document(Base):
     file_type = Column(String, nullable=False) # pdf, docx, txt, etc.
     file_path = Column(String, nullable=False)
     status = Column(String, default="PROCESSING") # PROCESSING, COMPLETED, FAILED
+    visibility = Column(String, default="INTERNAL_ONLY") # INTERNAL_ONLY, CLIENT_SHARED, CLIENT_UPLOAD
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -133,6 +137,7 @@ class ChatSession(Base):
     organization_id = Column(Integer, ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
+    visibility = Column(String, default="INTERNAL_ONLY")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -149,6 +154,7 @@ class ChatMessage(Base):
     sender = Column(String, nullable=False) # user or assistant
     content = Column(Text, nullable=False)
     sources = Column(JSON, nullable=True) # List of dicts: {"doc_name": ..., "text": ...}
+    visibility = Column(String, default="INTERNAL_ONLY")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
@@ -162,6 +168,7 @@ class Diagnosis(Base):
     organization_id = Column(Integer, ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     status = Column(String, default="PENDING") # PENDING, COMPLETED
+    visibility = Column(String, default="INTERNAL_ONLY") # INTERNAL_ONLY, DRAFT_INTERNAL, APPROVED, CLIENT_VISIBLE
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -193,6 +200,7 @@ class Roadmap(Base):
     workspace_id = Column(Integer, ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
     organization_id = Column(Integer, ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     diagnosis_id = Column(Integer, ForeignKey("diagnoses.id", ondelete="CASCADE"), nullable=False)
+    visibility = Column(String, default="INTERNAL_ONLY") # INTERNAL_ONLY, DRAFT_INTERNAL, APPROVED, CLIENT_VISIBLE
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
@@ -211,6 +219,7 @@ class RoadmapItem(Base):
     status = Column(String, default="TODO") # TODO, IN_PROGRESS, DONE
     assigned_to = Column(String, nullable=True)
     due_date = Column(Date, nullable=True)
+    visibility = Column(String, default="INTERNAL_ONLY") # INTERNAL_ONLY, DRAFT_INTERNAL, APPROVED, CLIENT_VISIBLE
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
