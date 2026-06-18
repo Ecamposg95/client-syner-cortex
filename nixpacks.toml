@@ -5,8 +5,11 @@ nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
 cmds = [
-  "python -m venv .venv && .venv/bin/pip install -r requirements.txt",
-  "npm install --prefix frontend"
+  "python -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt",
+  # --include=dev forces vite/tsc/tailwind (devDependencies) to install even
+  # when Nixpacks sets NODE_ENV=production, otherwise `npm run build` fails with
+  # "vite: not found".
+  "npm ci --prefix frontend --include=dev"
 ]
 
 [phases.build]
@@ -14,7 +17,7 @@ cmds = [
   "npm run build --prefix frontend"
 ]
 
+# Run DB migrations, then boot the API. Kept in sync with railway.json, whose
+# deploy.startCommand is the value Railway actually executes.
 [start]
-cmd = ".venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-# Ensure the startup runs in the virtualenv
-runImage = "ubuntu-22.04"
+cmd = ".venv/bin/alembic upgrade head && (.venv/bin/python -m app.scripts.bootstrap_admin || true) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"

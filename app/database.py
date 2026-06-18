@@ -9,6 +9,11 @@ load_dotenv()
 # Retrieve database URL from environment or fallback to local SQLite for rapid prototyping
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./syner_cortex.db")
 
+# Some hosts (Railway, Heroku) expose the legacy "postgres://" scheme, which
+# SQLAlchemy 2.0 no longer recognizes. Normalize it to "postgresql://".
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # Setup connection arguments based on database engine
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):

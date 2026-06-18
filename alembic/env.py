@@ -20,7 +20,11 @@ import app.models.insight      # noqa: F401
 config = context.config
 
 # Prefer an explicit DATABASE_URL env var, else fall back to the app's URL.
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", DATABASE_URL))
+# Normalize the legacy "postgres://" scheme (Railway/Heroku) for SQLAlchemy 2.0.
+_db_url = os.getenv("DATABASE_URL", DATABASE_URL)
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+config.set_main_option("sqlalchemy.url", _db_url)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
