@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.database import engine
-from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi, clevel, toolkit, surveys, public_surveys, admin, portal, insights
+from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi, clevel, toolkit, surveys, public_surveys, admin, portal, insights, raci
 
 # Schema is managed by Alembic (`alembic upgrade head`), not create_all.
 # Reference data + the initial crew admin are provisioned explicitly via
@@ -44,6 +44,7 @@ app.include_router(public_surveys.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(portal.router, prefix="/api")
 app.include_router(insights.router, prefix="/api")
+app.include_router(raci.router, prefix="/api")
 
 @app.get("/api/health", tags=["health"])
 def health_check():

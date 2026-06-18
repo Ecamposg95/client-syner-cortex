@@ -20,4 +20,4 @@ cmds = [
 # Run DB migrations, then boot the API. Kept in sync with railway.json, whose
 # deploy.startCommand is the value Railway actually executes.
 [start]
-cmd = ".venv/bin/alembic upgrade head && (.venv/bin/python -m app.scripts.seed_crew || true) && (.venv/bin/python -m app.seed.seed_toolkit || true) && (.venv/bin/python -m app.scripts.seed_bjx_client || true) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = ".venv/bin/alembic upgrade head && (.venv/bin/python -m app.scripts.seed_crew || true) && (.venv/bin/python -m app.seed.seed_toolkit || true) && (.venv/bin/python -m app.scripts.seed_bjx_client || true) && (.venv/bin/python -m app.scripts.seed_raci_bjx || true) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
