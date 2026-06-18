@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": ".venv/bin/alembic upgrade head && (.venv/bin/python -m app.scripts.bootstrap_admin || true) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "startCommand": ".venv/bin/alembic upgrade head && (.venv/bin/python -m app.scripts.seed_crew || true) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT",
     "restartPolicyType": "ON_FAILURE",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120
