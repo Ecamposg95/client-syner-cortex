@@ -250,6 +250,10 @@ const DynamicOutputRenderer: React.FC<{ toolName: string; data: any }> = ({ tool
   if (name.includes('academia')) return <AcademiaRenderer data={data} />;
   if (name.includes('gobernanza') || name.includes('organigrama')) return <GobernanzaRenderer data={data} />;
   if (name.includes('quick')) return <QuickWinsRenderer data={data} />;
+  if (name.includes('ehs')) return <EHSRenderer data={data} />;
+  if (name.includes('costos') || name.includes('costo')) return <CostosRenderer data={data} />;
+  if (name.includes('visual')) return <VisualMgmtRenderer data={data} />;
+  if (name.includes('manual')) return <ManualMaestroRenderer data={data} />;
 
   // Fallback: render JSON
   return <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(data, null, 2)}</pre>;
@@ -617,6 +621,163 @@ const QuickWinsRenderer: React.FC<{ data: any }> = ({ data }) => (
         </ul>
       </div>
     )}
+  </div>
+);
+
+// ─── EHS ──────────────────────────────────────────────────────────
+
+const EHSRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div>
+      <h4 className="font-bold text-[var(--ink)]">{data.titulo}</h4>
+      {data.alcance && <p className="text-xs text-[var(--muted)] mt-0.5">{data.alcance}</p>}
+    </div>
+    <div className="space-y-1.5">
+      {(data.peligros || []).map((p: any, i: number) => (
+        <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase flex-shrink-0 ${LEVEL_BADGE[p.nivel] || ''}`}>{p.nivel}</span>
+          <div>
+            <strong className="text-[var(--ink)]">{p.peligro}</strong>
+            {p.control && <p className="text-[var(--muted)] mt-0.5">🛡 {p.control}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+    <SOPChips label="EPP requerido" items={data.epp} color="#0ea5e9" />
+    {data.procedimientos?.length > 0 && (
+      <div>
+        <p className="text-[10px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-1">Procedimientos</p>
+        <div className="space-y-1">
+          {data.procedimientos.map((pr: any, i: number) => (
+            <div key={i} className="text-xs"><strong className="text-[var(--ink)]">{pr.nombre}.</strong> <span className="text-[var(--muted)]">{pr.descripcion}</span></div>
+          ))}
+        </div>
+      </div>
+    )}
+    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--border)]">
+      <SOPChips label="Normativa" items={data.normativa} color="#a855f7" />
+      <SOPChips label="Responsables" items={data.responsables} color="#22c55e" />
+    </div>
+  </div>
+);
+
+// ─── Análisis de Costos ───────────────────────────────────────────
+
+const CostosRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div>
+      <h4 className="font-bold text-[var(--ink)]">{data.titulo}</h4>
+      {data.periodo && <p className="text-xs text-[var(--muted-2)]">Periodo: {data.periodo}</p>}
+    </div>
+    <div className="space-y-2">
+      {(data.categorias || []).map((c: any, i: number) => (
+        <div key={i} className="text-xs">
+          <div className="flex justify-between mb-0.5">
+            <span className="text-[var(--ink)]">{c.categoria}</span>
+            <span className="font-semibold text-[var(--ink-2)]">{c.monto}{c.porcentaje != null ? ` · ${c.porcentaje}%` : ''}</span>
+          </div>
+          <div className="h-2 rounded-full bg-[var(--surface-2)] overflow-hidden">
+            <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${c.porcentaje || 0}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+    {data.hallazgos?.length > 0 && (
+      <div>
+        <p className="text-[10px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-1">Hallazgos</p>
+        <ul className="list-disc pl-4 text-xs text-[var(--muted)] space-y-0.5">
+          {data.hallazgos.map((h: string, i: number) => <li key={i}>{h}</li>)}
+        </ul>
+      </div>
+    )}
+    {data.ahorros_potenciales?.length > 0 && (
+      <div>
+        <p className="text-[10px] uppercase font-bold tracking-wide text-green-500 mb-1">Ahorros potenciales</p>
+        <div className="space-y-1.5">
+          {data.ahorros_potenciales.map((a: any, i: number) => (
+            <div key={i} className="p-2.5 rounded-lg bg-[var(--surface-2)] border-l-4 border-green-500 text-xs">
+              <div className="flex justify-between"><strong className="text-[var(--ink)]">{a.concepto}</strong><span className="text-green-500 font-bold">{a.ahorro_estimado}</span></div>
+              {a.accion && <p className="text-[var(--muted)] mt-0.5">{a.accion}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+// ─── Visual Management Pack ───────────────────────────────────────
+
+const VisualMgmtRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <h4 className="font-bold text-[var(--ink)]">{data.titulo}</h4>
+    <div className="space-y-2">
+      {(data.tableros || []).map((t: any, i: number) => (
+        <div key={i} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+          <div className="flex items-center justify-between">
+            <strong className="text-[var(--ink)]">📊 {t.nombre}</strong>
+            {t.frecuencia && <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--surface)] text-[var(--muted)]">{t.frecuencia}</span>}
+          </div>
+          {t.proposito && <p className="text-[var(--muted)] mt-1">{t.proposito}</p>}
+          {t.metricas?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {t.metricas.map((m: string, j: number) => (
+                <span key={j} className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--surface)] text-[var(--ink-2)] border border-[var(--border)]">{m}</span>
+              ))}
+            </div>
+          )}
+          {t.ubicacion && <p className="text-[10px] text-[var(--muted-2)] mt-1">📍 {t.ubicacion}</p>}
+        </div>
+      ))}
+    </div>
+    <SOPChips label="Elementos 5S" items={data.elementos_5s} color="#f59e0b" />
+    {data.rutinas?.length > 0 && (
+      <div>
+        <p className="text-[10px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-1">Rutinas</p>
+        <div className="space-y-1">
+          {data.rutinas.map((r: any, i: number) => (
+            <div key={i} className="text-xs flex flex-wrap gap-x-3 text-[var(--muted)]">
+              <strong className="text-[var(--ink)]">{r.nombre}</strong>
+              {r.cadencia && <span>🗓 {r.cadencia}</span>}
+              {r.responsable && <span>👤 {r.responsable}</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+// ─── Manual Maestro ───────────────────────────────────────────────
+
+const ManualMaestroRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div>
+      <div className="flex items-center gap-2">
+        <h4 className="font-bold text-[var(--ink)]">{data.titulo}</h4>
+        {data.version && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--accent)] text-white">{data.version}</span>}
+      </div>
+      {data.proposito && <p className="text-xs text-[var(--muted)] mt-0.5">{data.proposito}</p>}
+      {data.audiencia && <p className="text-[10px] text-[var(--muted-2)] mt-0.5">👥 {data.audiencia}</p>}
+    </div>
+    <div className="space-y-2">
+      {(data.secciones || []).map((s: any, i: number) => (
+        <div key={i} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-md bg-[var(--accent)] text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0">{s.numero}</span>
+            <strong className="text-[var(--ink)]">{s.titulo}</strong>
+          </div>
+          {s.descripcion && <p className="text-[var(--muted)] mt-1">{s.descripcion}</p>}
+          {s.contenido_clave?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {s.contenido_clave.map((c: string, j: number) => (
+                <span key={j} className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--surface)] text-[var(--ink-2)] border border-[var(--border)]">{c}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   </div>
 );
 

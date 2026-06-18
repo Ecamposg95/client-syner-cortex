@@ -372,6 +372,142 @@ def seed_toolkits():
                 },
                 "input_fields": ["empresa", "contexto"]
             },
+
+            # ── Quality, Safety & Compliance Toolkit · EHS ──
+            {
+                "toolkit": "Quality, Safety & Compliance Toolkit",
+                "name": "Plan EHS y Manejo de Residuos",
+                "description": "One-pager de seguridad, higiene y medio ambiente: peligros, controles, EPP, procedimientos y normativa aplicable.",
+                "system_prompt": "Eres un especialista en EHS (Environment, Health & Safety). Genera un plan EHS claro y accionable para piso: peligros con su nivel (ALTO/MEDIO/BAJO) y control, EPP requerido, procedimientos clave, normativa aplicable y responsables. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nÁrea / actividad: {area}\nMateriales o riesgos presentes:\n{riesgos}\n\nGenera el plan EHS.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "titulo": {"type": "string"},
+                        "alcance": {"type": "string"},
+                        "peligros": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "peligro": {"type": "string"},
+                                "nivel": {"type": "string", "enum": ["ALTO", "MEDIO", "BAJO"]},
+                                "control": {"type": "string"}
+                            }
+                        }},
+                        "epp": {"type": "array", "items": {"type": "string"}},
+                        "procedimientos": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "nombre": {"type": "string"},
+                                "descripcion": {"type": "string"}
+                            }
+                        }},
+                        "normativa": {"type": "array", "items": {"type": "string"}},
+                        "responsables": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["titulo", "peligros", "epp"]
+                },
+                "input_fields": ["empresa", "area", "riesgos"]
+            },
+
+            # ── Economic & Financial Toolkit · Análisis de Costos ──
+            {
+                "toolkit": "Economic & Financial Toolkit",
+                "name": "Análisis de Costos",
+                "description": "Desglose de costos por categoría con hallazgos y oportunidades de ahorro priorizadas.",
+                "system_prompt": "Eres un analista financiero. Genera un análisis de costos con el desglose por categoría (monto y porcentaje del total), hallazgos relevantes y oportunidades de ahorro con su ahorro estimado y acción sugerida. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nPeriodo: {periodo}\nDatos de costos / estructura:\n{datos}\n\nGenera el análisis de costos.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "titulo": {"type": "string"},
+                        "periodo": {"type": "string"},
+                        "categorias": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "categoria": {"type": "string"},
+                                "monto": {"type": "string"},
+                                "porcentaje": {"type": "number"}
+                            }
+                        }},
+                        "hallazgos": {"type": "array", "items": {"type": "string"}},
+                        "ahorros_potenciales": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "concepto": {"type": "string"},
+                                "ahorro_estimado": {"type": "string"},
+                                "accion": {"type": "string"}
+                            }
+                        }}
+                    },
+                    "required": ["titulo", "categorias"]
+                },
+                "input_fields": ["empresa", "periodo", "datos"]
+            },
+
+            # ── Visual Management & Adoption Toolkit · Visual Pack ──
+            {
+                "toolkit": "Visual Management & Adoption Toolkit",
+                "name": "Visual Management Pack",
+                "description": "Diseño de tableros de gestión visual, elementos 5S y rutinas de seguimiento para piso.",
+                "system_prompt": "Eres un consultor de gestión visual y mejora continua (Lean). Diseña un pack de gestión visual: tableros (con propósito, métricas, frecuencia y ubicación), elementos 5S y rutinas de seguimiento (con cadencia y responsable). Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nÁrea a gestionar visualmente: {area}\nObjetivos de control:\n{objetivos}\n\nGenera el Visual Management Pack.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "titulo": {"type": "string"},
+                        "tableros": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "nombre": {"type": "string"},
+                                "proposito": {"type": "string"},
+                                "metricas": {"type": "array", "items": {"type": "string"}},
+                                "frecuencia": {"type": "string"},
+                                "ubicacion": {"type": "string"}
+                            }
+                        }},
+                        "elementos_5s": {"type": "array", "items": {"type": "string"}},
+                        "rutinas": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "nombre": {"type": "string"},
+                                "cadencia": {"type": "string"},
+                                "responsable": {"type": "string"}
+                            }
+                        }}
+                    },
+                    "required": ["titulo", "tableros"]
+                },
+                "input_fields": ["empresa", "area", "objetivos"]
+            },
+
+            # ── Process & Operations Toolkit · Manual Maestro ──
+            {
+                "toolkit": "Process & Operations Toolkit",
+                "name": "Manual Maestro (Estructura)",
+                "description": "Tabla de contenidos y estructura del manual maestro franchise-ready, con secciones y contenidos clave.",
+                "system_prompt": "Eres un consultor de estandarización y franquicias. Genera la estructura del Manual Maestro (franchise-ready): propósito, audiencia, versión y secciones numeradas, cada una con su descripción y contenidos clave. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nModelo de negocio / giro: {giro}\nAlcance del manual:\n{alcance}\n\nGenera la estructura del Manual Maestro.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "titulo": {"type": "string"},
+                        "version": {"type": "string"},
+                        "proposito": {"type": "string"},
+                        "audiencia": {"type": "string"},
+                        "secciones": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "numero": {"type": "string"},
+                                "titulo": {"type": "string"},
+                                "descripcion": {"type": "string"},
+                                "contenido_clave": {"type": "array", "items": {"type": "string"}}
+                            }
+                        }}
+                    },
+                    "required": ["titulo", "secciones"]
+                },
+                "input_fields": ["empresa", "giro", "alcance"]
+            },
         ]
 
         for t in tools_and_templates:

@@ -219,6 +219,76 @@ class ToolExecutionService:
                 "Agendar capacitación Pit Crew para el equipo operativo."
               ]
             }
+        if 'ehs' in tool_name:
+            return {
+              "titulo": "Plan EHS · Manejo de Residuos Peligrosos en Taller",
+              "alcance": "Aplica a las áreas de servicio, almacén y manejo de aceites, solventes y baterías.",
+              "peligros": [
+                { "peligro": "Derrame de aceites y solventes", "nivel": "ALTO", "control": "Contención secundaria y kit antiderrames en cada bahía." },
+                { "peligro": "Manejo de baterías y ácidos", "nivel": "ALTO", "control": "Almacén ventilado con bandeja anticorrosiva y EPP específico." },
+                { "peligro": "Inhalación de vapores", "nivel": "MEDIO", "control": "Ventilación forzada y mascarillas con filtro." },
+                { "peligro": "Resbalones por piso húmedo", "nivel": "MEDIO", "control": "Señalización y limpieza inmediata de derrames." }
+              ],
+              "epp": ["Guantes de nitrilo", "Lentes de seguridad", "Botas con casquillo", "Mascarilla con filtro", "Mandil resistente a químicos"],
+              "procedimientos": [
+                { "nombre": "Segregación de residuos", "descripcion": "Separar residuos peligrosos por tipo en contenedores etiquetados." },
+                { "nombre": "Bitácora de residuos", "descripcion": "Registrar volumen, tipo y disposición final de cada residuo." },
+                { "nombre": "Respuesta a derrames", "descripcion": "Contener, absorber y disponer según protocolo; reportar el evento." }
+              ],
+              "normativa": ["NOM-052-SEMARNAT (residuos peligrosos)", "NOM-018-STPS (sustancias químicas)", "Bitácora ante SEMARNAT"],
+              "responsables": ["Coordinador EHS", "Jefe de Taller", "Encargado de Almacén"]
+            }
+        if 'costos' in tool_name or 'costo' in tool_name:
+            return {
+              "titulo": "Análisis de Costos Operativos BJX",
+              "periodo": "2025-2026",
+              "categorias": [
+                { "categoria": "Nómina operativa", "monto": "$4,200,000", "porcentaje": 42 },
+                { "categoria": "Refacciones e insumos", "monto": "$3,000,000", "porcentaje": 30 },
+                { "categoria": "Renta y servicios", "monto": "$1,500,000", "porcentaje": 15 },
+                { "categoria": "Marketing y ventas", "monto": "$800,000", "porcentaje": 8 },
+                { "categoria": "Otros / administrativos", "monto": "$500,000", "porcentaje": 5 }
+              ],
+              "hallazgos": [
+                "La nómina representa el 42% de los costos: oportunidad de productividad por bahía.",
+                "Compras de refacciones sin consolidar entre sucursales encarecen el insumo.",
+                "No hay costeo por modelo de servicio, dificultando el pricing."
+              ],
+              "ahorros_potenciales": [
+                { "concepto": "Compra consolidada de refacciones", "ahorro_estimado": "$300,000 / año", "accion": "Negociar volumen con proveedor único multi-sede." },
+                { "concepto": "Costeo por modelo de servicio", "ahorro_estimado": "+8% margen", "accion": "Implementar tabla de costo por concepto de servicio." }
+              ]
+            }
+        if 'visual' in tool_name:
+            return {
+              "titulo": "Visual Management Pack · Taller BJX",
+              "tableros": [
+                { "nombre": "Tablero de Bahías", "proposito": "Estado en tiempo real de cada bahía y unidad.", "metricas": ["Bahías ocupadas", "Tiempo en bahía", "Unidades en espera"], "frecuencia": "Tiempo real", "ubicacion": "Piso de taller" },
+                { "nombre": "Tablero de KPIs Diarios", "proposito": "Seguimiento diario de productividad y calidad.", "metricas": ["Órdenes cerradas", "Retrabajos", "Tiempo promedio"], "frecuencia": "Diario", "ubicacion": "Oficina de jefe de taller" },
+                { "nombre": "Tablero de Satisfacción", "proposito": "Visibilidad del NPS y quejas.", "metricas": ["NPS", "Quejas abiertas", "Tiempo de respuesta"], "frecuencia": "Semanal", "ubicacion": "Recepción" }
+              ],
+              "elementos_5s": ["Marcado de pisos por zona", "Sombras de herramienta", "Etiquetado de almacén", "Estándar de orden por bahía", "Auditoría 5S semanal"],
+              "rutinas": [
+                { "nombre": "Junta de arranque (huddle)", "cadencia": "Diario · 08:00", "responsable": "Jefe de Taller" },
+                { "nombre": "Revisión de KPIs", "cadencia": "Semanal", "responsable": "Gerente de Operaciones" },
+                { "nombre": "Auditoría 5S", "cadencia": "Semanal", "responsable": "Coordinador de Calidad" }
+              ]
+            }
+        if 'manual' in tool_name:
+            return {
+              "titulo": "Manual Maestro BJX Motors — Franchise Ready",
+              "version": "v1.0",
+              "proposito": "Estandarizar la operación multi-sede y habilitar el modelo franquiciable.",
+              "audiencia": "Franquiciatarios, Gerencia de Operaciones y equipo de piso.",
+              "secciones": [
+                { "numero": "1", "titulo": "Modelo de Negocio", "descripcion": "Propuesta de valor y promesa de marca.", "contenido_clave": ["Propuesta de valor", "Mercado objetivo", "Estándar de marca"] },
+                { "numero": "2", "titulo": "Core Journey de Servicio", "descripcion": "Recorrido end-to-end A1→A17.", "contenido_clave": ["Mapa del journey", "Roles por etapa", "KPIs por etapa"] },
+                { "numero": "3", "titulo": "SOPs Críticos", "descripcion": "Los 10 procedimientos operativos clave.", "contenido_clave": ["Recepción", "Diagnóstico", "Refacciones", "Calidad", "Entrega"] },
+                { "numero": "4", "titulo": "Gobernanza y Estructura", "descripcion": "Organigrama, comités y RACI.", "contenido_clave": ["Organigrama", "Matriz RACI", "Cadencia de juntas"] },
+                { "numero": "5", "titulo": "Control y KPIs", "descripcion": "KPI Book y tableros visuales.", "contenido_clave": ["KPI Book", "Tableros", "Rutinas de seguimiento"] },
+                { "numero": "6", "titulo": "Cultura y Academia", "descripcion": "Capacitación y certificación Pit Crew.", "contenido_clave": ["Plan de academia", "Evaluaciones", "Certificación"] }
+              ]
+            }
         return { "message": "Output generado exitosamente" }
 
 class ToolPromptBuilderService:
