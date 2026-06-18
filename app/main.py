@@ -3,7 +3,10 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.database import engine
+from app.security.ratelimit import limiter
 from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi, clevel, toolkit, surveys, public_surveys, admin, portal, insights
 
 # Schema is managed by Alembic (`alembic upgrade head`), not create_all.
@@ -15,6 +18,11 @@ app = FastAPI(
     description="Enterprise AI Consulting Operating System & RAG SaaS Platform",
     version="1.0.0"
 )
+
+# Per-IP rate limiting (anti brute-force). Endpoints opt in via @limiter.limit;
+# exceeding a limit returns HTTP 429.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS configuration — restricted to configured origins (env CORS_ORIGINS)
 from app.config import CORS_ORIGINS

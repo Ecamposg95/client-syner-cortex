@@ -52,3 +52,12 @@ CORS_ORIGINS = _resolve_cors_origins()
 
 # ── Password policy ────────────────────────────────────────────────────────
 MIN_PASSWORD_LENGTH = int(os.getenv("MIN_PASSWORD_LENGTH", "8"))
+
+# ── Rate limiting (anti brute-force on /auth) ──────────────────────────────
+# Per-client-IP limits applied to the authentication endpoints. Tune via env;
+# set RATE_LIMIT_ENABLED=false to disable entirely (e.g. for load tests).
+RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in (
+    "1", "true", "yes", "on",
+)
+AUTH_LOGIN_RATE_LIMIT = os.getenv("AUTH_LOGIN_RATE_LIMIT", "10/minute")
+AUTH_SIGNUP_RATE_LIMIT = os.getenv("AUTH_SIGNUP_RATE_LIMIT", "5/minute")

@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.models import User, Organization, OrganizationUser
 from app.security.auth import get_password_hash, verify_password, create_access_token
+from app.security.ratelimit import limiter
+from app.config import AUTH_LOGIN_RATE_LIMIT, AUTH_SIGNUP_RATE_LIMIT
 from app.schemas.schemas import UserCreate, UserOut, Token, LoginRequest, ChangePasswordRequest
 from app.dependencies import get_current_active_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def signup(user_in: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit(AUTH_SIGNUP_RATE_LIMIT)
+def signup(request: Request, user_in: UserCreate, db: Session = Depends(get_db)):
     """
     Registers a new user and creates their default personal organization.
     """
@@ -58,7 +61,8 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
 import datetime
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit(AUTH_LOGIN_RATE_LIMIT)
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Authenticate user via form data (OAuth2 standard, username = email).
     """
@@ -75,7 +79,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login-json", response_model=Token)
-def login_json(credentials: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit(AUTH_LOGIN_RATE_LIMIT)
+def login_json(request: Request, credentials: LoginRequest, db: Session = Depends(get_db)):
     """
     Authenticate user via JSON body (Vite React frontend friendly).
     """
