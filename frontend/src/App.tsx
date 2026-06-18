@@ -22,6 +22,7 @@ import { RoadmapView } from './components/views/RoadmapView';
 import { AcademyView } from './components/views/AcademyView';
 import { AuditorView } from './components/views/AuditorView';
 import { GovernanceView } from './components/views/GovernanceView';
+import { RaciMatrixView } from './components/views/RaciMatrixView';
 import { SurveysView } from './components/views/SurveysView';
 import { SurveyResultsView } from './components/views/SurveyResultsView';
 import { PublicSurveyView } from './components/views/PublicSurveyView';
@@ -234,6 +235,14 @@ export const App: React.FC = () => {
           element={
             <PrivateRoute>
               <GovernanceView />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/raci"
+          element={
+            <PrivateRoute>
+              <RaciMatrixView />
             </PrivateRoute>
           }
         />

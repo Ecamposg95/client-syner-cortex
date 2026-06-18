@@ -28,7 +28,8 @@ import {
   ClipboardList,
   Clock,
   Box,
-  Lightbulb
+  Lightbulb,
+  Grid3x3
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -111,6 +112,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     {
       title: 'Gestión Operativa',
       items: [
+        { name: 'Matriz RACI',  path: '/raci',        icon: Grid3x3 },
         { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
         { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
         { name: 'Encuestas',    path: '/surveys',     icon: ClipboardList },
@@ -132,10 +134,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       ]
     },
     {
+      title: 'Mi operación',
+      items: [
+        { name: 'Matriz RACI',  path: '/raci',        icon: Grid3x3 },
+        { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
+      ]
+    },
+    {
       title: 'Seguimiento',
       items: [
         { name: 'Insights',     path: '/insights',    icon: Lightbulb },
-        { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
         { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
         { name: 'Academia',     path: '/academy',     icon: BookOpen },
       ]
