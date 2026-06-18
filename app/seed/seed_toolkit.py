@@ -12,10 +12,8 @@ def seed_toolkits():
         print("Starting Cortex Consulting Toolkit seed...")
         Base.metadata.create_all(bind=engine)
 
-        # Clear existing to prevent duplicates
-        db.query(ToolTemplate).delete()
-        db.query(ConsultingTool).delete()
-        db.query(ConsultingToolkit).delete()
+        # Idempotent upsert (no destructive delete) so it's safe to run on every
+        # deploy without breaking existing ToolRuns that reference tool ids.
 
         # ═══ TOOLKITS ═══
         toolkits_data = [
@@ -33,8 +31,14 @@ def seed_toolkits():
 
         created_toolkits = {}
         for tk_data in toolkits_data:
-            tk = ConsultingToolkit(**tk_data)
-            db.add(tk)
+            tk = db.query(ConsultingToolkit).filter(ConsultingToolkit.name == tk_data["name"]).first()
+            if tk:
+                tk.description = tk_data["description"]
+                tk.icon = tk_data["icon"]
+                tk.is_active = True
+            else:
+                tk = ConsultingToolkit(**tk_data)
+                db.add(tk)
             db.flush()
             created_toolkits[tk.name] = tk.id
 
@@ -512,17 +516,31 @@ def seed_toolkits():
 
         for t in tools_and_templates:
             toolkit_id = created_toolkits[t["toolkit"]]
-            tool = ConsultingTool(toolkit_id=toolkit_id, name=t["name"], description=t["description"])
-            db.add(tool)
+            tool = db.query(ConsultingTool).filter(
+                ConsultingTool.toolkit_id == toolkit_id,
+                ConsultingTool.name == t["name"],
+            ).first()
+            if tool:
+                tool.description = t["description"]
+                tool.is_active = True
+            else:
+                tool = ConsultingTool(toolkit_id=toolkit_id, name=t["name"], description=t["description"])
+                db.add(tool)
             db.flush()
 
-            template = ToolTemplate(
-                tool_id=tool.id,
-                system_prompt=t["system_prompt"],
-                user_prompt_template=t["user_prompt"],
-                json_schema_output=t["schema"],
-            )
-            db.add(template)
+            template = db.query(ToolTemplate).filter(ToolTemplate.tool_id == tool.id).first()
+            if template:
+                template.system_prompt = t["system_prompt"]
+                template.user_prompt_template = t["user_prompt"]
+                template.json_schema_output = t["schema"]
+            else:
+                template = ToolTemplate(
+                    tool_id=tool.id,
+                    system_prompt=t["system_prompt"],
+                    user_prompt_template=t["user_prompt"],
+                    json_schema_output=t["schema"],
+                )
+                db.add(template)
             print(f"  ✓ {t['toolkit']} → {t['name']}")
 
         db.commit()

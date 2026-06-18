@@ -22,6 +22,7 @@ import app.models.models  # noqa: F401
 from app.models.models import (
     Organization, OrganizationUser, User, Module, OrganizationModule, Workspace,
 )
+from app.models.clevel import ConsultingEngagement
 from app.security.auth import get_password_hash
 
 OWNER_EMAIL = "jorge@bjxmotors.com"
@@ -95,6 +96,10 @@ def seed_bjx_client():
             if name not in existing_ws:
                 db.add(Workspace(organization_id=org.id, name=name, description=desc))
 
+        # First-run only: don't re-seed (and overwrite) consulting data on every deploy.
+        needs_clevel = db.query(ConsultingEngagement).filter(
+            ConsultingEngagement.organization_id == org.id).first() is None
+
         db.commit()
         print(f"✅ BJX client: org {org_action} (id={org.id}). "
               f"Owner {OWNER_EMAIL} {'created' if owner_created else 'already existed'}. "
@@ -111,13 +116,16 @@ def seed_bjx_client():
     finally:
         db.close()
 
-    # 5. C-Level consulting data (engagement, findings, risks, decisions).
-    #    Reuses the existing idempotent seed so the portal / Insights have content.
-    try:
-        from app.seed.seed_clevel_bjx import seed_clevel_bjx
-        seed_clevel_bjx()
-    except Exception as e:
-        print(f"⚠️  C-Level data seed skipped: {e}")
+    # 5. C-Level consulting data (engagement, findings, risks, decisions) — only
+    #    the first time, so client-side changes aren't wiped on later deploys.
+    if needs_clevel:
+        try:
+            from app.seed.seed_clevel_bjx import seed_clevel_bjx
+            seed_clevel_bjx()
+        except Exception as e:
+            print(f"⚠️  C-Level data seed skipped: {e}")
+    else:
+        print("ℹ️  C-Level data already present; skipping (preserves client changes).")
 
 
 if __name__ == "__main__":
