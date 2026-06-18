@@ -27,7 +27,8 @@ import {
   ClipboardCheck,
   ClipboardList,
   Clock,
-  Box
+  Box,
+  Lightbulb
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -96,6 +97,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         { name: 'Engagements',  path: '/engagements',     icon: Briefcase },
         { name: 'Toolkits',     path: '/toolkits',        icon: Box },
         { name: 'Findings',     path: '/findings',        icon: FileSearch },
+        { name: 'Insights',     path: '/insights',        icon: Lightbulb },
         { name: 'Initiatives',  path: '/initiatives',     icon: Milestone },
       ]
     },
@@ -132,6 +134,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     {
       title: 'Seguimiento',
       items: [
+        { name: 'Insights',     path: '/insights',    icon: Lightbulb },
         { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
         { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
         { name: 'Academia',     path: '/academy',     icon: BookOpen },

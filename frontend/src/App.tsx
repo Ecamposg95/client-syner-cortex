@@ -7,6 +7,7 @@ import { Register } from './pages/Register';
 import { Overview } from './components/views/Overview';
 import { EngagementsView } from './components/views/EngagementsView';
 import { FindingsView } from './components/views/FindingsView';
+import { InsightsView } from './components/views/InsightsView';
 import { InitiativesView } from './components/views/InitiativesView';
 import { Deliverables } from './components/views/Deliverables';
 import { DecisionsView } from './components/views/DecisionsView';
@@ -137,6 +138,14 @@ export const App: React.FC = () => {
           element={
             <PrivateRoute>
               <InitiativesView />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/insights"
+          element={
+            <PrivateRoute>
+              <InsightsView />
             </PrivateRoute>
           }
         />

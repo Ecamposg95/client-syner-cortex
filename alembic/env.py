@@ -13,6 +13,7 @@ import app.models.clevel       # noqa: F401
 import app.models.kpi          # noqa: F401
 import app.models.toolkit      # noqa: F401
 import app.models.survey       # noqa: F401
+import app.models.insight      # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
