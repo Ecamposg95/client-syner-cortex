@@ -212,6 +212,166 @@ def seed_toolkits():
                 },
                 "input_fields": ["empresa", "proyecto", "objetivo", "recursos"]
             },
+
+            # ── Process & Operations Toolkit · Core Journey ──
+            {
+                "toolkit": "Process & Operations Toolkit",
+                "name": "Core Journey del Cliente",
+                "description": "Recorrido end-to-end del cliente (Captación → Postventa) agrupado por fases, ideal para presentar en juntas.",
+                "system_prompt": "Eres un consultor de experiencia de cliente y operaciones. Construye el 'core journey' end-to-end del cliente como una secuencia de etapas codificadas (A1, A2, ...) agrupadas en fases macro. Cada etapa lleva un código corto, nombre, descripción breve, responsable y un KPI asociado. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nSector / tipo de servicio: {sector}\nMomentos clave del cliente:\n{momentos}\n\nGenera el core journey agrupado en 4-6 fases macro, con sus etapas codificadas.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "journey_nombre": {"type": "string"},
+                        "fases": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "fase": {"type": "string"},
+                                "etapas": {"type": "array", "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "codigo": {"type": "string"},
+                                        "nombre": {"type": "string"},
+                                        "descripcion": {"type": "string"},
+                                        "responsable": {"type": "string"},
+                                        "kpi": {"type": "string"}
+                                    }
+                                }}
+                            }
+                        }}
+                    },
+                    "required": ["journey_nombre", "fases"]
+                },
+                "input_fields": ["empresa", "sector", "momentos"]
+            },
+
+            # ── Process & Operations Toolkit · SOP Card ──
+            {
+                "toolkit": "Process & Operations Toolkit",
+                "name": "SOP Card Operativo",
+                "description": "Procedimiento operativo estándar en formato tarjeta visual (objetivo, pasos, entradas/salidas, KPIs y riesgos).",
+                "system_prompt": "Eres un ingeniero de procesos. Documenta un Procedimiento Operativo Estándar (SOP) en formato tarjeta, claro y accionable para piso. Incluye código, objetivo, alcance, responsable, pasos numerados con detalle, entradas, salidas, KPIs de control y riesgos. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nProceso a estandarizar: {proceso}\nContexto / notas del consultor:\n{contexto}\n\nGenera el SOP Card con al menos 5 pasos.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "codigo": {"type": "string"},
+                        "titulo": {"type": "string"},
+                        "objetivo": {"type": "string"},
+                        "alcance": {"type": "string"},
+                        "responsable": {"type": "string"},
+                        "pasos": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "n": {"type": "integer"},
+                                "accion": {"type": "string"},
+                                "detalle": {"type": "string"}
+                            }
+                        }},
+                        "entradas": {"type": "array", "items": {"type": "string"}},
+                        "salidas": {"type": "array", "items": {"type": "string"}},
+                        "kpis": {"type": "array", "items": {"type": "string"}},
+                        "riesgos": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["codigo", "titulo", "objetivo", "pasos"]
+                },
+                "input_fields": ["empresa", "proceso", "contexto"]
+            },
+
+            # ── Culture, Training & Adoption Toolkit · Academia ──
+            {
+                "toolkit": "Culture, Training & Adoption Toolkit",
+                "name": "Módulo de Academia Syner",
+                "description": "Diseño instruccional de un módulo de curso (objetivo de aprendizaje, lecciones, actividad y evaluación) para impartir en clase.",
+                "system_prompt": "Eres un diseñador instruccional experto en capacitación corporativa. Diseña un módulo de curso listo para impartir, con objetivo de aprendizaje claro, lecciones con contenido y una actividad práctica por lección, criterios de evaluación y recursos. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Curso / Academia: {curso}\nTema del módulo: {tema}\nPúblico objetivo: {publico}\nDuración estimada: {duracion}\n\nGenera el módulo con 3-5 lecciones.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "curso": {"type": "string"},
+                        "modulo": {"type": "string"},
+                        "objetivo_aprendizaje": {"type": "string"},
+                        "duracion": {"type": "string"},
+                        "publico": {"type": "string"},
+                        "lecciones": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "titulo": {"type": "string"},
+                                "contenido": {"type": "string"},
+                                "actividad": {"type": "string"}
+                            }
+                        }},
+                        "evaluacion": {"type": "array", "items": {"type": "string"}},
+                        "recursos": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["curso", "modulo", "objetivo_aprendizaje", "lecciones"]
+                },
+                "input_fields": ["curso", "tema", "publico", "duracion"]
+            },
+
+            # ── Governance & Structure Toolkit · Gobernanza ──
+            {
+                "toolkit": "Governance & Structure Toolkit",
+                "name": "Organigrama de Gobernanza",
+                "description": "Estructura de gobierno corporativo: órgano máximo, comités, roles clave y cadencia de juntas.",
+                "system_prompt": "Eres un consultor de gobierno corporativo. Diseña la estructura de gobernanza de la organización: órgano máximo de decisión, comités (con propósito, frecuencia e integrantes), roles clave (con a quién reportan y responsabilidades) y la cadencia de juntas. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nTamaño / etapa: {etapa}\nÁreas y liderazgos actuales:\n{liderazgos}\n\nGenera la estructura de gobernanza.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "organo_maximo": {"type": "string"},
+                        "comites": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "nombre": {"type": "string"},
+                                "proposito": {"type": "string"},
+                                "frecuencia": {"type": "string"},
+                                "integrantes": {"type": "array", "items": {"type": "string"}}
+                            }
+                        }},
+                        "roles": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "titulo": {"type": "string"},
+                                "reporta_a": {"type": "string"},
+                                "responsabilidades": {"type": "array", "items": {"type": "string"}}
+                            }
+                        }},
+                        "cadencia": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["organo_maximo", "comites", "roles"]
+                },
+                "input_fields": ["empresa", "etapa", "liderazgos"]
+            },
+
+            # ── Implementation Toolkit · Quick Wins ──
+            {
+                "toolkit": "Implementation Toolkit",
+                "name": "Quick Wins & Próximos Pasos",
+                "description": "One-pager de victorias rápidas priorizadas por impacto/esfuerzo y próximos pasos inmediatos.",
+                "system_prompt": "Eres un consultor de implementación. Identifica 'quick wins' accionables priorizados por impacto (ALTO/MEDIO/BAJO) y esfuerzo (ALTO/MEDIO/BAJO), cada uno con responsable y plazo, más una lista de próximos pasos inmediatos. Responde solo en JSON puro respetando el esquema.",
+                "user_prompt": "Empresa: {empresa}\nHallazgos / contexto del diagnóstico:\n{contexto}\n\nGenera 4-6 quick wins y los próximos pasos.",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "contexto": {"type": "string"},
+                        "quick_wins": {"type": "array", "items": {
+                            "type": "object",
+                            "properties": {
+                                "titulo": {"type": "string"},
+                                "impacto": {"type": "string", "enum": ["ALTO", "MEDIO", "BAJO"]},
+                                "esfuerzo": {"type": "string", "enum": ["ALTO", "MEDIO", "BAJO"]},
+                                "responsable": {"type": "string"},
+                                "plazo": {"type": "string"}
+                            }
+                        }},
+                        "proximos_pasos": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["quick_wins", "proximos_pasos"]
+                },
+                "input_fields": ["empresa", "contexto"]
+            },
         ]
 
         for t in tools_and_templates:

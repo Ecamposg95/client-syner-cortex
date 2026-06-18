@@ -122,6 +122,103 @@ class ToolExecutionService:
                 { "accion": "Presentar resultados a Junta Directiva", "responsable": "Director de Proyecto", "entregable": "Informe ejecutivo de transformación", "kpi_exito": "Aprobación de Fase 2 del roadmap" },
               ]
             }
+        if 'journey' in tool_name:
+            return {
+              "journey_nombre": "Core Journey de Servicio Automotriz BJX",
+              "fases": [
+                { "fase": "Captación & Recepción", "etapas": [
+                    { "codigo": "A1", "nombre": "Captación", "descripcion": "Lead entra por cita, walk-in o flotilla.", "responsable": "Comercial", "kpi": "Tasa de conversión de citas" },
+                    { "codigo": "A2", "nombre": "Recepción", "descripcion": "Recepción física del vehículo y del cliente.", "responsable": "Asesor de Servicio", "kpi": "Tiempo de recepción" },
+                    { "codigo": "A3", "nombre": "Registro", "descripcion": "Alta de la orden de servicio en sistema.", "responsable": "Asesor de Servicio", "kpi": "% órdenes con datos completos" },
+                    { "codigo": "A4", "nombre": "Apertura", "descripcion": "Apertura formal de la orden y check-in.", "responsable": "Asesor de Servicio", "kpi": "Órdenes abiertas/día" }
+                ]},
+                { "fase": "Diagnóstico & Cotización", "etapas": [
+                    { "codigo": "A5", "nombre": "Diagnóstico", "descripcion": "Inspección técnica del vehículo.", "responsable": "Técnico Senior", "kpi": "Precisión de diagnóstico" },
+                    { "codigo": "A6", "nombre": "Cotización", "descripcion": "Elaboración del presupuesto.", "responsable": "Asesor de Servicio", "kpi": "Tiempo de cotización" },
+                    { "codigo": "A7", "nombre": "Aprobación", "descripcion": "Autorización del cliente.", "responsable": "Cliente / Asesor", "kpi": "Tasa de aprobación" }
+                ]},
+                { "fase": "Planeación & Ejecución", "etapas": [
+                    { "codigo": "A8", "nombre": "Planeación", "descripcion": "Asignación de bahía y técnico.", "responsable": "Jefe de Taller", "kpi": "Utilización de bahías" },
+                    { "codigo": "A9", "nombre": "Refacciones", "descripcion": "Surtido de refacciones desde almacén.", "responsable": "Almacén", "kpi": "Disponibilidad de refacciones" },
+                    { "codigo": "A10", "nombre": "Ejecución", "descripcion": "Realización del servicio.", "responsable": "Técnico Asignado", "kpi": "Tiempo de ejecución" },
+                    { "codigo": "A12", "nombre": "Calidad", "descripcion": "Control de calidad final.", "responsable": "Control de Calidad", "kpi": "Tasa de retrabajo" }
+                ]},
+                { "fase": "Facturación & Entrega", "etapas": [
+                    { "codigo": "A14", "nombre": "Facturación", "descripcion": "Generación de factura.", "responsable": "Administración", "kpi": "Tiempo de facturación" },
+                    { "codigo": "A15", "nombre": "Cobro", "descripcion": "Cobro al cliente.", "responsable": "Caja", "kpi": "Cartera vencida" },
+                    { "codigo": "A16", "nombre": "Entrega", "descripcion": "Entrega del vehículo.", "responsable": "Asesor de Servicio", "kpi": "Tiempo de entrega" }
+                ]},
+                { "fase": "Postventa", "etapas": [
+                    { "codigo": "A17", "nombre": "Postventa", "descripcion": "Seguimiento y encuesta de satisfacción.", "responsable": "Comercial / CX", "kpi": "NPS" }
+                ]}
+              ]
+            }
+        if 'sop' in tool_name:
+            return {
+              "codigo": "SOP-OPS-02",
+              "titulo": "Recepción de Vehículo",
+              "objetivo": "Estandarizar la recepción del vehículo y del cliente para asegurar trazabilidad y una experiencia consistente en todas las sucursales.",
+              "alcance": "Aplica desde la llegada del cliente hasta la apertura formal de la orden de servicio.",
+              "responsable": "Asesor de Servicio",
+              "pasos": [
+                { "n": 1, "accion": "Recibir al cliente", "detalle": "Saludo protocolario, confirmar cita o registrar walk-in." },
+                { "n": 2, "accion": "Inspección perimetral", "detalle": "Documentar con fotos el estado del vehículo (carrocería, kilometraje, nivel de combustible)." },
+                { "n": 3, "accion": "Levantar requerimiento", "detalle": "Registrar síntomas y solicitudes del cliente en la orden." },
+                { "n": 4, "accion": "Generar orden de servicio", "detalle": "Alta en sistema con datos completos del cliente y vehículo." },
+                { "n": 5, "accion": "Confirmar expectativas", "detalle": "Acordar tiempos estimados y canal de contacto con el cliente." },
+                { "n": 6, "accion": "Entregar acuse", "detalle": "Compartir folio de la orden y resguardo de llaves." }
+              ],
+              "entradas": ["Vehículo", "Datos del cliente", "Cita (si aplica)"],
+              "salidas": ["Orden de servicio", "Evidencia fotográfica", "Resguardo de llaves"],
+              "kpis": ["Tiempo de recepción ≤ 15 min", "% órdenes con datos completos ≥ 98%"],
+              "riesgos": ["Daños no documentados", "Datos de contacto incorrectos", "Llaves sin resguardo"]
+            }
+        if 'academia' in tool_name:
+            return {
+              "curso": "Academia BJX Pit Crew",
+              "modulo": "Módulo 1 · Recepción de Excelencia",
+              "objetivo_aprendizaje": "Al finalizar, el asesor ejecuta el SOP de recepción cumpliendo trazabilidad y experiencia del cliente.",
+              "duracion": "90 minutos",
+              "publico": "Asesores de Servicio y Recepción",
+              "lecciones": [
+                { "titulo": "El primer contacto cuenta", "contenido": "Protocolo de bienvenida y manejo de expectativas del cliente.", "actividad": "Role-play de recepción en parejas." },
+                { "titulo": "Inspección perimetral sin huecos", "contenido": "Cómo documentar el estado del vehículo con evidencia fotográfica.", "actividad": "Práctica de check-in con un vehículo real." },
+                { "titulo": "Orden de servicio impecable", "contenido": "Captura de datos completos y síntomas del cliente.", "actividad": "Levantar 3 órdenes simuladas sin errores." }
+              ],
+              "evaluacion": ["Checklist de recepción ≥ 90%", "Evaluación práctica aprobada", "Quiz teórico ≥ 8/10"],
+              "recursos": ["Plantilla de orden de servicio", "Guía rápida de inspección", "Video demostrativo"]
+            }
+        if 'gobernanza' in tool_name or 'organigrama' in tool_name:
+            return {
+              "organo_maximo": "Consejo de Administración BJX Motors",
+              "comites": [
+                { "nombre": "Comité de Operaciones", "proposito": "Seguimiento de KPIs operativos y estandarización entre sucursales.", "frecuencia": "Quincenal", "integrantes": ["Director General", "Gerente de Operaciones", "Jefes de Taller"] },
+                { "nombre": "Comité Comercial", "proposito": "Revisión de pipeline, flotillas y satisfacción del cliente.", "frecuencia": "Mensual", "integrantes": ["Director General", "Gerente Comercial", "CX Lead"] },
+                { "nombre": "Comité Financiero", "proposito": "Control presupuestal, cartera y rentabilidad por sucursal.", "frecuencia": "Mensual", "integrantes": ["Director General", "CFO", "Contraloría"] }
+              ],
+              "roles": [
+                { "titulo": "Director General", "reporta_a": "Consejo de Administración", "responsabilidades": ["Estrategia", "Resultados globales", "Relación con el Consejo"] },
+                { "titulo": "Gerente de Operaciones", "reporta_a": "Director General", "responsabilidades": ["Estandarización de procesos", "KPIs operativos", "Gestión de sucursales"] },
+                { "titulo": "Gerente Comercial", "reporta_a": "Director General", "responsabilidades": ["Ventas y flotillas", "Pricing", "Experiencia del cliente"] },
+                { "titulo": "CFO", "reporta_a": "Director General", "responsabilidades": ["Finanzas", "Presupuesto", "Cartera"] }
+              ],
+              "cadencia": ["Junta de Consejo: Trimestral", "Comités operativos: Quincenal/Mensual", "Cierre mensual: Primeros 5 días hábiles"]
+            }
+        if 'quick' in tool_name:
+            return {
+              "contexto": "Diagnóstico inicial BJX Motors: oportunidades de estandarización y digitalización de alto impacto y bajo esfuerzo.",
+              "quick_wins": [
+                { "titulo": "Estandarizar SOP de recepción en las 3 sucursales", "impacto": "ALTO", "esfuerzo": "BAJO", "responsable": "Gerente de Operaciones", "plazo": "2 semanas" },
+                { "titulo": "Tablero de KPIs piloto en sucursal matriz", "impacto": "ALTO", "esfuerzo": "MEDIO", "responsable": "Atlas Tech", "plazo": "3 semanas" },
+                { "titulo": "Resguardo de llaves con folio", "impacto": "MEDIO", "esfuerzo": "BAJO", "responsable": "Jefe de Taller", "plazo": "1 semana" },
+                { "titulo": "Encuesta NPS post-servicio automatizada", "impacto": "MEDIO", "esfuerzo": "BAJO", "responsable": "CX Lead", "plazo": "2 semanas" }
+              ],
+              "proximos_pasos": [
+                "Validar SOPs con Dirección y publicarlos en piso.",
+                "Definir los 5 KPIs core del tablero ejecutivo.",
+                "Agendar capacitación Pit Crew para el equipo operativo."
+              ]
+            }
         return { "message": "Output generado exitosamente" }
 
 class ToolPromptBuilderService:

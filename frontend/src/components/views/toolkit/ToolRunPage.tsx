@@ -245,6 +245,11 @@ const DynamicOutputRenderer: React.FC<{ toolName: string; data: any }> = ({ tool
   if (name.includes('macroflujo')) return <MacroflujoRenderer data={data} />;
   if (name.includes('kpi')) return <KPIBookRenderer data={data} />;
   if (name.includes('roadmap')) return <RoadmapRenderer data={data} />;
+  if (name.includes('journey')) return <CoreJourneyRenderer data={data} />;
+  if (name.includes('sop')) return <SOPCardRenderer data={data} />;
+  if (name.includes('academia')) return <AcademiaRenderer data={data} />;
+  if (name.includes('gobernanza') || name.includes('organigrama')) return <GobernanzaRenderer data={data} />;
+  if (name.includes('quick')) return <QuickWinsRenderer data={data} />;
 
   // Fallback: render JSON
   return <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(data, null, 2)}</pre>;
@@ -401,6 +406,217 @@ const RoadmapRenderer: React.FC<{ data: any }> = ({ data }) => (
         </div>
       </div>
     ))}
+  </div>
+);
+
+// ─── Core Journey ─────────────────────────────────────────────────
+
+const JOURNEY_COLORS = ['#6366f1', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#a855f7'];
+
+const CoreJourneyRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <h4 className="font-bold text-sm text-[var(--ink)]">{data.journey_nombre}</h4>
+    <div className="space-y-3">
+      {(data.fases || []).map((fase: any, fi: number) => {
+        const color = JOURNEY_COLORS[fi % JOURNEY_COLORS.length];
+        return (
+          <div key={fi} className="rounded-lg border border-[var(--border)] overflow-hidden">
+            <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white" style={{ background: color }}>
+              {fase.fase}
+            </div>
+            <div className="p-3 flex flex-wrap gap-2 bg-[var(--surface-2)]">
+              {(fase.etapas || []).map((e: any, ei: number) => (
+                <div key={ei} className="flex-1 min-w-[140px] p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-white" style={{ background: color }}>{e.codigo}</span>
+                    <strong className="text-xs text-[var(--ink)]">{e.nombre}</strong>
+                  </div>
+                  <p className="text-[11px] text-[var(--muted)] leading-snug">{e.descripcion}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[var(--muted-2)]">
+                    {e.responsable && <span>👤 {e.responsable}</span>}
+                    {e.kpi && <span>📊 {e.kpi}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
+// ─── SOP Card ─────────────────────────────────────────────────────
+
+const SOPChips: React.FC<{ label: string; items: string[]; color: string }> = ({ label, items, color }) => (
+  <div>
+    <p className="text-[10px] uppercase font-bold tracking-wide mb-1" style={{ color }}>{label}</p>
+    <div className="flex flex-wrap gap-1">
+      {(items || []).map((it, i) => (
+        <span key={i} className="px-2 py-0.5 rounded text-[10px] bg-[var(--surface-2)] text-[var(--ink-2)] border border-[var(--border)]">{it}</span>
+      ))}
+    </div>
+  </div>
+);
+
+const SOPCardRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div className="rounded-lg border border-[var(--border)] p-4 bg-[var(--surface-2)]">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[var(--accent)]">{data.codigo}</span>
+        <h4 className="font-bold text-[var(--ink)]">{data.titulo}</h4>
+      </div>
+      <p className="text-xs text-[var(--muted)]">{data.objetivo}</p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-[var(--muted-2)]">
+        {data.alcance && <span><strong>Alcance:</strong> {data.alcance}</span>}
+        {data.responsable && <span><strong>Responsable:</strong> {data.responsable}</span>}
+      </div>
+    </div>
+    <div className="space-y-2">
+      {(data.pasos || []).map((p: any, i: number) => (
+        <div key={i} className="flex gap-3 items-start">
+          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[11px] font-bold">{p.n ?? i + 1}</span>
+          <div className="text-xs">
+            <strong className="text-[var(--ink)]">{p.accion}</strong>
+            {p.detalle && <p className="text-[var(--muted)] mt-0.5">{p.detalle}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--border)]">
+      <SOPChips label="Entradas" items={data.entradas} color="#3b82f6" />
+      <SOPChips label="Salidas" items={data.salidas} color="#22c55e" />
+      <SOPChips label="KPIs" items={data.kpis} color="#a855f7" />
+      <SOPChips label="Riesgos" items={data.riesgos} color="#ef4444" />
+    </div>
+  </div>
+);
+
+// ─── Academia (Course Module) ─────────────────────────────────────
+
+const AcademiaRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div>
+      <p className="text-[11px] uppercase font-bold tracking-wide text-[var(--accent)]">{data.curso}</p>
+      <h4 className="font-bold text-[var(--ink)]">{data.modulo}</h4>
+      <div className="flex flex-wrap gap-2 mt-1.5">
+        {data.duracion && <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--surface-2)] text-[var(--ink-2)]">⏱ {data.duracion}</span>}
+        {data.publico && <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--surface-2)] text-[var(--ink-2)]">👥 {data.publico}</span>}
+      </div>
+    </div>
+    {data.objetivo_aprendizaje && (
+      <div className="p-3 rounded-lg bg-[var(--accent-tint,rgba(99,102,241,0.08))] border-l-4 border-[var(--accent)] text-xs">
+        <strong className="text-[var(--accent-strong)]">Objetivo de aprendizaje</strong>
+        <p className="text-[var(--ink)] mt-0.5">{data.objetivo_aprendizaje}</p>
+      </div>
+    )}
+    <div className="space-y-2">
+      {(data.lecciones || []).map((l: any, i: number) => (
+        <div key={i} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[10px] font-bold">{i + 1}</span>
+            <strong className="text-[var(--ink)]">{l.titulo}</strong>
+          </div>
+          {l.contenido && <p className="text-[var(--muted)] mt-1">{l.contenido}</p>}
+          {l.actividad && <p className="text-[var(--accent)] mt-1">🎯 {l.actividad}</p>}
+        </div>
+      ))}
+    </div>
+    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--border)]">
+      <SOPChips label="Evaluación" items={data.evaluacion} color="#f59e0b" />
+      <SOPChips label="Recursos" items={data.recursos} color="#0ea5e9" />
+    </div>
+  </div>
+);
+
+// ─── Gobernanza ───────────────────────────────────────────────────
+
+const GobernanzaRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    <div className="text-center p-3 rounded-lg text-white font-bold text-sm" style={{ background: 'linear-gradient(135deg, var(--accent-strong), var(--accent))' }}>
+      {data.organo_maximo}
+    </div>
+    <div>
+      <p className="text-[11px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-2">Comités</p>
+      <div className="grid grid-cols-1 gap-2">
+        {(data.comites || []).map((c: any, i: number) => (
+          <div key={i} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+            <div className="flex items-center justify-between">
+              <strong className="text-[var(--ink)]">{c.nombre}</strong>
+              {c.frecuencia && <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--surface)] text-[var(--muted)]">{c.frecuencia}</span>}
+            </div>
+            {c.proposito && <p className="text-[var(--muted)] mt-1">{c.proposito}</p>}
+            {c.integrantes?.length > 0 && <p className="text-[var(--muted-2)] mt-1">{c.integrantes.join(' · ')}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+    <div>
+      <p className="text-[11px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-2">Roles clave</p>
+      <div className="space-y-1.5">
+        {(data.roles || []).map((r: any, i: number) => (
+          <div key={i} className="p-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+            <div className="flex items-center gap-2">
+              <strong className="text-[var(--ink)]">{r.titulo}</strong>
+              {r.reporta_a && <span className="text-[10px] text-[var(--muted-2)]">→ reporta a {r.reporta_a}</span>}
+            </div>
+            {r.responsabilidades?.length > 0 && (
+              <p className="text-[var(--muted)] mt-0.5">{r.responsabilidades.join(' · ')}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+    {data.cadencia?.length > 0 && (
+      <div className="flex flex-wrap gap-1 pt-2 border-t border-[var(--border)]">
+        {data.cadencia.map((c: string, i: number) => (
+          <span key={i} className="px-2 py-0.5 rounded text-[10px] bg-[var(--surface-2)] text-[var(--ink-2)] border border-[var(--border)]">🗓 {c}</span>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// ─── Quick Wins ───────────────────────────────────────────────────
+
+const LEVEL_BADGE: Record<string, string> = {
+  ALTO: 'text-red-500 bg-red-500/10',
+  MEDIO: 'text-yellow-500 bg-yellow-500/10',
+  BAJO: 'text-blue-500 bg-blue-500/10',
+};
+
+const QuickWinsRenderer: React.FC<{ data: any }> = ({ data }) => (
+  <div className="space-y-4 overflow-y-auto max-h-[520px]">
+    {data.contexto && <p className="text-xs text-[var(--muted)] italic">{data.contexto}</p>}
+    <div className="space-y-2">
+      {(data.quick_wins || []).map((q: any, i: number) => (
+        <div key={i} className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs">
+          <div className="flex items-start justify-between gap-2">
+            <strong className="text-[var(--ink)]">{q.titulo}</strong>
+            <div className="flex gap-1 flex-shrink-0">
+              {q.impacto && <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BADGE[q.impacto] || ''}`}>Imp {q.impacto}</span>}
+              {q.esfuerzo && <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${LEVEL_BADGE[q.esfuerzo] || ''}`}>Esf {q.esfuerzo}</span>}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5 text-[10px] text-[var(--muted-2)]">
+            {q.responsable && <span>👤 {q.responsable}</span>}
+            {q.plazo && <span>⏱ {q.plazo}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+    {data.proximos_pasos?.length > 0 && (
+      <div>
+        <p className="text-[11px] uppercase font-bold tracking-wide text-[var(--muted-2)] mb-1.5">Próximos pasos</p>
+        <ul className="space-y-1">
+          {data.proximos_pasos.map((p: string, i: number) => (
+            <li key={i} className="flex items-start gap-2 text-xs text-[var(--ink-2)]">
+              <span className="text-[var(--accent)] font-bold">{i + 1}.</span>{p}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
   </div>
 );
 
