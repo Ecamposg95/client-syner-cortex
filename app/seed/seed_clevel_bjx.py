@@ -45,7 +45,16 @@ def seed_clevel_bjx():
         
         # 3. Create Engagement
         print("Creating Engagement...")
-        db.query(ConsultingEngagement).filter(ConsultingEngagement.organization_id == org.id).delete()
+        # Idempotency: delete existing engagement children first — the FKs have no
+        # ON DELETE CASCADE, so deliverables/findings/initiatives must go before
+        # the engagements they reference.
+        eng_ids = [row.id for row in db.query(ConsultingEngagement.id).filter(
+            ConsultingEngagement.organization_id == org.id).all()]
+        if eng_ids:
+            db.query(Deliverable).filter(Deliverable.engagement_id.in_(eng_ids)).delete(synchronize_session=False)
+            db.query(Finding).filter(Finding.engagement_id.in_(eng_ids)).delete(synchronize_session=False)
+            db.query(StrategicInitiative).filter(StrategicInitiative.engagement_id.in_(eng_ids)).delete(synchronize_session=False)
+            db.query(ConsultingEngagement).filter(ConsultingEngagement.id.in_(eng_ids)).delete(synchronize_session=False)
         eng = ConsultingEngagement(
             organization_id=org.id,
             title="Diagnóstico Ejecutivo y Roadmap de Expansión BJX",
