@@ -57,3 +57,47 @@ def test_without_object_type_no_visibility_narrowing(db):
     # Crew query with no object type returns all org rows (used for internal lists).
     rows = scoped_query(db, Document, _crew(), 10).all()
     assert len(rows) == 3
+
+
+# --- Enum-visibility column (ToolRun.visibility is a SQLAlchemy Enum) ---------
+
+from app.models.toolkit import ToolRun, ToolRunStatus, Visibility
+
+
+@pytest.fixture
+def db_toolrun():
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    # FKs are not enforced in SQLite by default, so we insert runs without
+    # parent rows. status/visibility are real Enum columns.
+    session.add_all([
+        ToolRun(organization_id=10, tool_id=1, created_by=3,
+                status=ToolRunStatus.CLIENT_SHARED, visibility=Visibility.CLIENT_SHARED),
+        ToolRun(organization_id=10, tool_id=1, created_by=1,
+                status=ToolRunStatus.AI_GENERATED, visibility=Visibility.INTERNAL_ONLY),
+        ToolRun(organization_id=20, tool_id=1, created_by=3,
+                status=ToolRunStatus.CLIENT_SHARED, visibility=Visibility.CLIENT_SHARED),
+    ])
+    session.commit()
+    yield session
+    session.close()
+
+
+def test_client_sees_only_shared_toolrun_in_org_enum_column(db_toolrun):
+    rows = scoped_query(
+        db_toolrun, ToolRun, _client(), 10, object_type=ObjectType.TOOLRUN
+    ).all()
+    # INTERNAL_ONLY hidden; other-org excluded by org filter.
+    assert len(rows) == 1
+    assert rows[0].visibility == Visibility.CLIENT_SHARED
+    assert rows[0].organization_id == 10
+
+
+def test_crew_sees_all_toolruns_in_org_not_other_org_enum_column(db_toolrun):
+    rows = scoped_query(
+        db_toolrun, ToolRun, _crew(), 10, object_type=ObjectType.TOOLRUN
+    ).all()
+    assert len(rows) == 2
+    assert all(r.organization_id == 10 for r in rows)
+    assert {r.visibility for r in rows} == {Visibility.CLIENT_SHARED, Visibility.INTERNAL_ONLY}
