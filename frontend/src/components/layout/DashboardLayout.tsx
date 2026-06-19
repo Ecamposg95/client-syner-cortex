@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { Badge } from '../ui/Badge';
@@ -30,8 +30,8 @@ import {
   Box,
   Lightbulb,
   Grid3x3,
-  Star,
-  Search
+  Search,
+  ArrowLeft
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -43,6 +43,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const { workspaces, activeWorkspace, selectWorkspace, createWorkspace, fetchWorkspaces, isLoading } = useWorkspaceStore();
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
@@ -91,37 +92,47 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     }
   };
 
-  // Internal Syner Crew: full consulting platform.
-  const crewNavGroups = [
+  // Crew navigation has TWO modes:
+  // FIRM mode (managing the practice — no client active): thin, portfolio-level.
+  const crewFirmNav = [
     {
-      title: 'Consulting Hub (Ejecutivo)',
+      title: 'Práctica',
       items: [
-        { name: 'Dashboard',    path: '/dashboard',       icon: LayoutGrid },
-        { name: 'Clientes',     path: '/admin/clients',   icon: Building2 },
-        { name: 'Engagements',  path: '/engagements',     icon: Briefcase },
-        { name: 'Toolkits',     path: '/toolkits',        icon: Box },
+        { name: 'Clientes',    path: '/admin/clients',   icon: Building2 },
+        { name: 'Toolkits',    path: '/toolkits',        icon: Box },
+      ]
+    }
+  ];
+
+  // CLIENT mode (attending one client — every module scoped to that org).
+  const crewClientNav = [
+    {
+      title: 'Cliente',
+      items: [
+        { name: 'Resumen',      path: '/dashboard',       icon: LayoutGrid },
+        { name: 'Matriz RACI',  path: '/raci',            icon: Grid3x3 },
+        { name: 'KPIs',         path: '/kpis',            icon: TrendingUp },
         { name: 'Findings',     path: '/findings',        icon: FileSearch },
         { name: 'Insights',     path: '/insights',        icon: Lightbulb },
         { name: 'Initiatives',  path: '/initiatives',     icon: Milestone },
       ]
     },
     {
-      title: 'Bóveda de Cliente',
+      title: 'Bóveda',
       items: [
         { name: 'Deliverables', path: '/deliverables',    icon: FolderClosed },
         { name: 'Decisions',    path: '/decisions',       icon: AlertTriangle },
       ]
     },
     {
-      title: 'Gestión Operativa',
+      title: 'Operativa',
       items: [
-        { name: 'Matriz RACI',  path: '/raci',        icon: Grid3x3 },
-        { name: 'Roadmap',      path: '/roadmap',     icon: Calendar },
-        { name: 'KPIs',         path: '/kpis',        icon: TrendingUp },
-        { name: 'Encuestas',    path: '/surveys',     icon: ClipboardList },
-        { name: 'Academia',     path: '/academy',     icon: BookOpen },
-        { name: 'Auditoría',    path: '/auditor',     icon: ClipboardCheck },
-        { name: 'Bitácora',     path: '/bitacora',    icon: Clock },
+        { name: 'Engagements',  path: '/engagements',     icon: Briefcase },
+        { name: 'Roadmap',      path: '/roadmap',         icon: Calendar },
+        { name: 'Encuestas',    path: '/surveys',         icon: ClipboardList },
+        { name: 'Academia',     path: '/academy',         icon: BookOpen },
+        { name: 'Auditoría',    path: '/auditor',         icon: ClipboardCheck },
+        { name: 'Bitácora',     path: '/bitacora',        icon: Clock },
       ]
     }
   ];
@@ -153,23 +164,44 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     }
   ];
 
-  const navGroups = isSynerCrew ? crewNavGroups : clientNavGroups;
+  // Crew is in CLIENT mode when the active org is a client; otherwise FIRM mode
+  // (managing the practice). The Syner firm is the home you return to, never a
+  // pickable "client" in the list.
+  const isClientMode = currentOrgRelation?.organization?.organization_type === 'CLIENT';
+  const navGroups = isSynerCrew ? (isClientMode ? crewClientNav : crewFirmNav) : clientNavGroups;
 
-  // Crew org switcher: separate the Syner firm ("home") from client accounts so
-  // selecting a client reads as "who am I working on", not "which org am I".
-  const synerOrgs = organizations.filter((r) => r.organization?.organization_type === 'SYNER');
-  const clientOrgs = organizations.filter((r) => r.organization?.organization_type !== 'SYNER');
+  const synerOrg = organizations.find((r) => r.organization?.organization_type === 'SYNER') || null;
+  const clientOrgs = organizations.filter((r) => r.organization?.organization_type === 'CLIENT');
   const orgQuery = orgSearch.trim().toLowerCase();
   const filteredClients = orgQuery
     ? clientOrgs.filter((r) => r.organization.name.toLowerCase().includes(orgQuery))
     : clientOrgs;
-  const activeIsSyner = currentOrgRelation?.organization?.organization_type === 'SYNER';
+  // The Proyecto selector only makes sense once a client is in focus.
+  const showWorkspaceSelector = !isSynerCrew || isClientMode;
 
-  const handleSelectOrg = (orgId: number) => {
+  // Entering a client = switch the active org to it and drop into its dashboard.
+  const enterClient = (orgId: number) => {
     selectOrganization(orgId);
     setIsOrgDropdownOpen(false);
     setOrgSearch('');
+    setIsSidebarOpen(false);
+    navigate('/dashboard');
   };
+
+  // Leaving a client returns crew to firm mode (the Clientes console is home).
+  const backToFirm = () => {
+    if (synerOrg) selectOrganization(synerOrg.organization_id);
+    setIsOrgDropdownOpen(false);
+    setIsSidebarOpen(false);
+    navigate('/admin/clients');
+  };
+
+  // Firm mode has no per-client dashboard — keep crew on the Clientes console.
+  useEffect(() => {
+    if (isSynerCrew && !isClientMode && location.pathname === '/dashboard') {
+      navigate('/admin/clients', { replace: true });
+    }
+  }, [isSynerCrew, isClientMode, location.pathname, navigate]);
 
   return (
     <div className="min-h-screen flex font-sans" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
@@ -226,10 +258,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--border)' }}>
           <label className="font-mono text-[9px] uppercase tracking-widest block mb-1.5 px-1"
                  style={{ color: 'var(--muted-2)' }}>
-            Organización
+            {isSynerCrew ? (isClientMode ? 'Atendiendo a' : 'Cliente') : 'Organización'}
           </label>
           {isSynerCrew ? (
             <>
+              {isClientMode && (
+                <button
+                  onClick={backToFirm}
+                  className="w-full flex items-center gap-1.5 mb-2 text-[11px] font-medium transition-colors hover:opacity-80"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  <ArrowLeft size={12} /> Volver a la firma
+                </button>
+              )}
               <button
                 onClick={() => { setIsOrgDropdownOpen(!isOrgDropdownOpen); setIsWorkspaceDropdownOpen(false); }}
                 className="w-full flex items-center justify-between p-2 rounded-lg text-left text-sm font-medium transition-all duration-200"
@@ -240,10 +281,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 }}
               >
                 <div className="flex items-center gap-2 truncate">
-                  {activeIsSyner
-                    ? <Star size={14} style={{ color: 'var(--accent-strong)' }} fill="currentColor" />
-                    : <Building size={14} style={{ color: 'var(--accent)' }} />}
-                  <span className="truncate">{currentOrgRelation?.organization?.name || 'Cargando...'}</span>
+                  <Building2 size={14} style={{ color: 'var(--accent)' }} />
+                  <span className="truncate">
+                    {isClientMode ? (currentOrgRelation?.organization?.name || 'Cliente') : 'Entrar a un cliente'}
+                  </span>
                 </div>
                 <ChevronDown size={14} className={`transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
               </button>
@@ -251,35 +292,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               {isOrgDropdownOpen && (
                 <div className="absolute top-full left-4 right-4 rounded-lg shadow-float z-30 overflow-hidden"
                      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  {/* Tu firma (Syner) — pinned home identity */}
-                  {synerOrgs.length > 0 && (
-                    <div className="py-1" style={{ borderBottom: '1px solid var(--border)' }}>
-                      <p className="px-3 pt-1 pb-0.5 font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
-                        Tu firma
-                      </p>
-                      {synerOrgs.map((relation) => {
-                        const active = relation.organization_id === currentOrgRelation?.organization_id;
-                        return (
-                          <button
-                            key={relation.organization_id}
-                            onClick={() => handleSelectOrg(relation.organization_id)}
-                            className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors hover:bg-[var(--accent-tint)]"
-                            style={{ color: active ? 'var(--accent-strong)' : 'var(--ink-2)', fontWeight: active ? 600 : 400 }}
-                          >
-                            <Star size={13} fill="currentColor" style={{ color: 'var(--accent-strong)' }} />
-                            <span className="truncate">{relation.organization.name}</span>
-                            {active && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Clientes — searchable */}
+                  {/* Clientes — searchable. Syner (the firm) is NOT listed here:
+                      it's the home you return to via "Volver a la firma". */}
                   <div className="py-1">
                     <div className="px-3 pt-1.5 pb-1 flex items-center justify-between">
                       <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
-                        Clientes
+                        {isClientMode ? 'Cambiar de cliente' : 'Clientes'}
                       </span>
                       <span className="font-mono text-[9px]" style={{ color: 'var(--muted-2)' }}>{clientOrgs.length}</span>
                     </div>
@@ -309,7 +327,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         return (
                           <button
                             key={relation.organization_id}
-                            onClick={() => handleSelectOrg(relation.organization_id)}
+                            onClick={() => enterClient(relation.organization_id)}
                             className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors hover:bg-[var(--accent-tint)]"
                             style={{ color: active ? 'var(--accent-strong)' : 'var(--ink-2)', fontWeight: active ? 600 : 400 }}
                           >
@@ -335,7 +353,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           )}
         </div>
 
-        {/* Workspace Selector */}
+        {/* Workspace Selector — only relevant once a client is in focus. */}
+        {showWorkspaceSelector && (
         <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--border)' }}>
           <label className="font-mono text-[9px] uppercase tracking-widest block mb-1.5 px-1"
                  style={{ color: 'var(--muted-2)' }}>
@@ -389,6 +408,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             </div>
           )}
         </div>
+        )}
 
         <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
           {navGroups.map((group) => (
