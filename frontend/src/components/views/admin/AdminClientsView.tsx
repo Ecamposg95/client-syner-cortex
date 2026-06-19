@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Building2, Loader2, Plus, X, Copy, Check, Users, Boxes, LayoutGrid, ChevronRight,
+  Building2, Loader2, Plus, X, Copy, Check, Users, Boxes, LayoutGrid,
 } from 'lucide-react';
 import apiClient from '../../../api/client';
 import { Card } from '../../ui/Card';
+import { useAuthStore } from '../../../store/authStore';
 
 // ── API shapes ──────────────────────────────────────────────────────────
 interface ClientSummary {
@@ -42,6 +43,14 @@ const inputStyle: React.CSSProperties = {
 
 export const AdminClientsView: React.FC = () => {
   const navigate = useNavigate();
+  const selectOrganization = useAuthStore((s) => s.selectOrganization);
+
+  // Attending a client = switch the active org context and drop into its
+  // dashboard (puts crew into "client mode").
+  const attendClient = (orgId: number) => {
+    selectOrganization(orgId);
+    navigate('/dashboard');
+  };
 
   const [clients, setClients] = useState<ClientSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +180,8 @@ export const AdminClientsView: React.FC = () => {
             <Card
               key={client.id}
               className="p-0 overflow-hidden cursor-pointer group hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-              onClick={() => navigate('/admin/clients/' + client.id)}
+              onClick={() => attendClient(client.id)}
+              title="Atender a este cliente"
             >
               <div
                 className="h-1.5 w-full"
@@ -185,10 +195,14 @@ export const AdminClientsView: React.FC = () => {
                   >
                     <Building2 size={22} />
                   </div>
-                  <ChevronRight
-                    size={20}
-                    className="text-[var(--muted-2)] group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all"
-                  />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); navigate('/admin/clients/' + client.id); }}
+                    className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md transition-colors hover:bg-[var(--accent-tint)]"
+                    style={{ color: 'var(--muted)' }}
+                  >
+                    Gestionar
+                  </button>
                 </div>
 
                 <h3 className="font-bold text-base text-[var(--ink)] leading-tight mb-0.5">
