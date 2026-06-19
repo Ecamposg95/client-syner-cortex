@@ -6,7 +6,10 @@ from typing import List
 from app.database import get_db
 from app.models.models import Document, KnowledgeChunk, OrganizationUser, Workspace
 from app.schemas.schemas import DocumentOut
-from app.dependencies import get_organization_context, RoleChecker
+from app.dependencies import get_current_org_id, RoleChecker
+from app.policy import Action, ObjectType
+from app.policy.deps import get_principal, require_action, scoped_query
+from app.policy.principal import Principal
 from app.services.ai_engine import chunk_text, get_embedding
 import PyPDF2
 
@@ -90,15 +93,21 @@ def upload_document(
     workspace_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(RoleChecker(["CLIENT_OWNER", "CLIENT_EXECUTIVE", "CONSULTANT"]))
+    org_id: int = Depends(get_current_org_id),
+    # Eje 2: UPLOAD_CLIENT_DOCS is the matrix action that both Syner crew and the
+    # client editing tiers (OWNER/EXECUTIVE/MANAGER/CONTRIBUTOR) hold — the lane
+    # used to admit a document into a client workspace. The previous ad-hoc list
+    # (CLIENT_OWNER/CLIENT_EXECUTIVE/CONSULTANT) is a subset of this, so allowed
+    # callers keep access while the gate now derives from the §8 matrix.
+    principal: Principal = Depends(require_action(Action.UPLOAD_CLIENT_DOCS)),
 ):
     """
     Upload a document into a workspace and queue it for AI chunking/embeddings.
     """
-    # Verify workspace belongs to organization
+    # Verify workspace belongs to organization (Eje 1 scope check)
     workspace = db.query(Workspace).filter(
         Workspace.id == workspace_id,
-        Workspace.organization_id == org_ctx.organization_id
+        Workspace.organization_id == org_id
     ).first()
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace not found in this organization")
@@ -120,10 +129,16 @@ def upload_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Could not save file locally: {e}")
 
-    # Create document db entry
+    # Create document db entry.
+    # NOTE: visibility keeps the model default (INTERNAL_ONLY) — behaviour-preserving.
+    # TODO(visibility): once Document gains an `uploaded_by` column, a client upload
+    # should be stamped CLIENT_UPLOAD with uploaded_by=principal.user_id so the
+    # uploader can see it back through scoped_query (own-only state). Without that
+    # column, own-only states cannot be matched and client uploads stay invisible
+    # to the uploader on read — see list_workspace_documents below.
     document = Document(
         workspace_id=workspace_id,
-        organization_id=org_ctx.organization_id,
+        organization_id=org_id,
         name=filename,
         file_type=file_ext,
         file_path=file_path,
@@ -151,20 +166,64 @@ import datetime
 def list_workspace_documents(
     workspace_id: int,
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(get_organization_context)
+    org_id: int = Depends(get_current_org_id),
+    principal: Principal = Depends(get_principal),
 ):
     """
-    List all documents inside a workspace.
+    List documents inside a workspace.
+
+    Eje 3: routed through scoped_query so a CLIENT_USER only ever sees
+    CLIENT_SHARED documents (the whitelisted client-visible state for DOCUMENT);
+    internal states (INTERNAL_ONLY, etc.) are filtered out at the query layer.
+    Crew/superadmin see everything in scope. Previously this returned every row
+    in the workspace regardless of visibility — that leak is now closed.
+
+    TODO(visibility): owner_column=None because Document has no `uploaded_by`
+    column today, so the CLIENT_UPLOAD own-only state cannot be matched and a
+    client's own uploads are not yet returned here. Add `uploaded_by` and pass
+    owner_column=Document.uploaded_by to include them.
     """
-    # Verify workspace belongs to org
+    # Verify workspace belongs to org (Eje 1 scope check)
     workspace = db.query(Workspace).filter(
         Workspace.id == workspace_id,
-        Workspace.organization_id == org_ctx.organization_id
+        Workspace.organization_id == org_id
     ).first()
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace not found in this organization")
-        
-    return db.query(Document).filter(Document.workspace_id == workspace_id).all()
+
+    q = scoped_query(
+        db, Document, principal, org_id,
+        object_type=ObjectType.DOCUMENT,
+        owner_column=None,  # TODO: Document.uploaded_by once it exists
+    )
+    return q.filter(Document.workspace_id == workspace_id).all()
+
+@router.post("/{document_id}/share", response_model=DocumentOut, status_code=status.HTTP_200_OK)
+def share_document_with_client(
+    document_id: int,
+    db: Session = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+    # Eje 2: SHARE_WITH_CLIENT is the crew-only lane that exposes an internal
+    # artifact to the client. Gating here (instead of a role list) means only the
+    # roles the §8 matrix grants this action can flip a document to CLIENT_SHARED.
+    principal: Principal = Depends(require_action(Action.SHARE_WITH_CLIENT)),
+):
+    """
+    Mark an internal document as shared with the client (CLIENT_SHARED), so it
+    becomes visible to CLIENT_USERs via scoped_query. Crew-only.
+    """
+    # Eje 1: the document must live in the active organization.
+    doc = db.query(Document).filter(
+        Document.id == document_id,
+        Document.organization_id == org_id,
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    doc.visibility = "CLIENT_SHARED"
+    db.commit()
+    db.refresh(doc)
+    return doc
 
 @router.delete("/{document_id}", status_code=status.HTTP_200_OK)
 def delete_document(
