@@ -53,6 +53,9 @@ app.include_router(admin.router, prefix="/api")
 app.include_router(portal.router, prefix="/api")
 app.include_router(insights.router, prefix="/api")
 app.include_router(raci.router, prefix="/api")
+# Audit was imported but never mounted — now exposed behind require_action(VIEW_AUDIT)
+# (SYNER_ADMIN only). Must stay before the SPA catch-all route below.
+app.include_router(audit.router, prefix="/api")
 
 @app.get("/api/health", tags=["health"])
 def health_check():

@@ -4,7 +4,11 @@ from typing import List, Dict, Any
 from app.database import get_db
 from app.models.models import Organization, OrganizationUser, User
 from app.schemas.schemas import OrganizationCreate, OrganizationOut, OrganizationUserOut, OrganizationAddUser
-from app.dependencies import get_current_active_user, get_organization_context, RoleChecker
+from app.dependencies import (
+    get_current_active_user, get_organization_context, get_current_org_id, RoleChecker,
+)
+from app.policy import Action
+from app.policy.deps import require_action
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
@@ -47,7 +51,13 @@ def get_user_organizations(
 def create_organization(
     org_in: OrganizationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    # §8: CREATE_CLIENT is ALLOW only for SYNER_ADMIN (SUPERADMIN allow-all).
+    # require_action gates ejes 1+2 against the X-Organization-ID header, so the
+    # caller must resolve to SYNER_ADMIN in that org. Crew acting as the default
+    # SYNER_PARTNER, and any CLIENT_* role, are denied (the old self-signup path
+    # where any authenticated user could create an org is closed).
+    _principal=Depends(require_action(Action.CREATE_CLIENT)),
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Create a new organization and make the creator CLIENT_OWNER.
@@ -100,7 +110,12 @@ def get_organization_users(
 def add_user_to_organization(
     member_in: OrganizationAddUser,
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(RoleChecker(["CLIENT_OWNER"]))
+    # §8: managing an org's membership is org administration → CONFIGURE_MODULES
+    # (ALLOW only SYNER_ADMIN). This replaces RoleChecker(["CLIENT_OWNER"]); a
+    # CLIENT_OWNER can no longer add members on their own.
+    _principal=Depends(require_action(Action.CONFIGURE_MODULES)),
+    # Validated org id (membership-checked, Eje 1) the new member is added to.
+    organization_id: int = Depends(get_current_org_id),
 ):
     """
     Add/Invite an existing user to the organization by email.
@@ -111,15 +126,15 @@ def add_user_to_organization(
 
     # Check if already a member
     existing = db.query(OrganizationUser).filter(
-        OrganizationUser.organization_id == org_ctx.organization_id,
+        OrganizationUser.organization_id == organization_id,
         OrganizationUser.user_id == target_user.id
     ).first()
-    
+
     if existing:
         raise HTTPException(status_code=400, detail="User is already a member of this organization.")
 
     org_user = OrganizationUser(
-        organization_id=org_ctx.organization_id,
+        organization_id=organization_id,
         user_id=target_user.id,
         role=member_in.role
     )

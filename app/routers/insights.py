@@ -5,8 +5,9 @@ from pydantic import BaseModel
 import datetime
 
 from app.database import get_db
-from app.dependencies import get_current_org_id, RoleChecker
-from app.models.models import OrganizationUser
+from app.dependencies import get_current_org_id
+from app.policy import Action
+from app.policy.deps import require_action
 from app.models.insight import (
     Insight, InsightImpact, InsightEffort, InsightStatus, InsightSource,
 )
@@ -14,11 +15,16 @@ from app.services.insights_engine import generate_insights, compute_priority
 
 router = APIRouter()
 
-# Crew/management roles allowed to (re)generate and author insights.
-_MANAGE_ROLES = ["SYNER_PARTNER", "SYNER_CONSULTANT"]
-# Broader set allowed to advance an insight's lifecycle (clients triage too).
-_TRIAGE_ROLES = ["SYNER_PARTNER", "SYNER_CONSULTANT",
-                 "CLIENT_OWNER", "CLIENT_EXECUTIVE", "CLIENT_MANAGER"]
+# Wiring de política (Fase 3): los guards ad-hoc por lista de strings se
+# reemplazan por acciones §8 vía require_action, eliminando cualquier drift de
+# nombre de rol. Mapeo aplicado:
+#   - POST /insights/generate  -> RUN_TOOLS       (regenera desde fuentes/IA)
+#   - POST /insights           -> EDIT_AI_OUTPUTS (autoría de contenido IA)
+#   - PATCH /insights/{id}      -> UPDATE_TASKS    (triage del ciclo de vida;
+#                                                   clientes con permiso pasan)
+# Las acciones de lectura (list/matrix/critical-alarms) siguen org-scoped por
+# get_current_org_id; Insight no tiene columna `visibility`, así que no hay
+# narrowing de visibilidad por objeto.
 
 # Quadrants ordered from highest to lowest leverage (used to shape the matrix).
 _QUADRANTS = ["QUICK_WIN", "MAJOR_PROJECT", "INCREMENTAL", "LOW_PRIORITY"]
@@ -169,27 +175,39 @@ def critical_alarms(
     return [_serialize(i) for i in rows]
 
 
-@router.post("/insights/generate", response_model=dict, tags=["insights"])
+@router.post(
+    "/insights/generate",
+    response_model=dict,
+    tags=["insights"],
+    # §8 RUN_TOOLS: crew (ADMIN/PARTNER/CONSULTANT ALLOW; ANALYST/PM CONDITIONAL).
+    dependencies=[Depends(require_action(Action.RUN_TOOLS))],
+)
 def run_generation(
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(RoleChecker(_MANAGE_ROLES)),
+    org_id: int = Depends(get_current_org_id),
 ):
     """Regenerates insights from the org's findings, risks and latest diagnosis.
     Idempotent — only new source-linked insights are added."""
-    return generate_insights(db, org_ctx.organization_id)
+    return generate_insights(db, org_id)
 
 
-@router.post("/insights", response_model=InsightOut, tags=["insights"])
+@router.post(
+    "/insights",
+    response_model=InsightOut,
+    tags=["insights"],
+    # §8 EDIT_AI_OUTPUTS: autoría/edición de outputs IA por crew.
+    dependencies=[Depends(require_action(Action.EDIT_AI_OUTPUTS))],
+)
 def create_insight(
     payload: InsightCreate,
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(RoleChecker(_MANAGE_ROLES)),
+    org_id: int = Depends(get_current_org_id),
 ):
     impact = _parse_enum(InsightImpact, payload.impact, "impact")
     effort = _parse_enum(InsightEffort, payload.effort, "effort")
     score, quadrant = compute_priority(impact, effort)
     insight = Insight(
-        organization_id=org_ctx.organization_id,
+        organization_id=org_id,
         title=payload.title,
         description=payload.description,
         category=payload.category,
@@ -209,16 +227,24 @@ def create_insight(
     return _serialize(insight)
 
 
-@router.patch("/insights/{insight_id}", response_model=InsightOut, tags=["insights"])
+@router.patch(
+    "/insights/{insight_id}",
+    response_model=InsightOut,
+    tags=["insights"],
+    # §8 UPDATE_TASKS: crew ALLOW; CLIENT_MANAGER/CONTRIBUTOR ALLOW;
+    # CLIENT_OWNER/EXECUTIVE CONDITIONAL (pasan el gate). Triage del ciclo de
+    # vida del insight. Insight es org-scoped abajo (404 fuera de org).
+    dependencies=[Depends(require_action(Action.UPDATE_TASKS))],
+)
 def update_insight(
     insight_id: int,
     payload: InsightUpdate,
     db: Session = Depends(get_db),
-    org_ctx: OrganizationUser = Depends(RoleChecker(_TRIAGE_ROLES)),
+    org_id: int = Depends(get_current_org_id),
 ):
     insight = db.query(Insight).filter(
         Insight.id == insight_id,
-        Insight.organization_id == org_ctx.organization_id,
+        Insight.organization_id == org_id,
     ).first()
     if not insight:
         raise HTTPException(status_code=404, detail="Insight not found")

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import datetime
 
 from app.database import get_db
-from app.dependencies import get_current_org_id, get_current_user, RoleChecker
+from app.dependencies import get_current_org_id, RoleChecker
 from app.models.models import OrganizationUser
 from app.models.clevel import (
     ConsultingEngagement, Finding, StrategicInitiative,
@@ -128,7 +128,18 @@ class DecisionUpdate(BaseModel):
     status: str  # PENDING, APPROVED, REJECTED, DEFERRED, NEEDS_MORE_INFO
 
 
-# Client action: a client owner/manager (or crew) can resolve a pending decision.
+# Resolver una decisión pendiente.
+#
+# §8: la acción más cercana es APPROVE_DELIVERABLES, donde CLIENT_OWNER y
+# CLIENT_EXECUTIVE caen en la lane CLIENT_APPROVAL ("Sí**" = aprobación del
+# propio cliente, NO aprobación interna de Syner). Esa lane NO se modela como
+# require_action: `authorize`/`is_allowed` tratan CLIENT_APPROVAL como NO-allow
+# (su intención es un carril aparte), así que `require_action(APPROVE_DELIVERABLES)`
+# bloquearía a los clientes y rompería el flujo de resolución de decisiones.
+# Por eso aquí mantenemos un guard explícito por roles canónicos (sin drift:
+# todos los nombres son ya CLIENT_*/SYNER_* canónicos), que es el equivalente
+# operativo de la lane CLIENT_APPROVAL + crew. El narrowing por org se aplica
+# abajo (Decision es org-scoped; fuera de org -> 404).
 _DECISION_ROLES = ["CLIENT_OWNER", "CLIENT_EXECUTIVE", "CLIENT_MANAGER",
                    "SYNER_PARTNER", "SYNER_CONSULTANT"]
 

@@ -294,23 +294,13 @@ def test_documents_list_crew_sees_internal(client):
 # /api/roadmaps/latest  (workspace-scoped)
 # =========================================================================== #
 
-@pytest.mark.xfail(reason="fuga estado-interno: arreglar en wiring PR2", strict=False)
 def test_roadmaps_latest_client_hides_internal(client):
-    """LEAK: get_latest_roadmap returns the most recent roadmap of the workspace
-    with NO visibility filter. The latest (id=2) is CLIENT_VISIBLE here, but the
-    endpoint would just as happily return an INTERNAL_ONLY latest roadmap — and
-    it leaks INTERNAL_ONLY roadmap items inside whichever roadmap it returns."""
+    """FIXED (PR2 wiring): the latest roadmap in this seed is INTERNAL_ONLY, so a
+    CLIENT_USER must NOT receive it — get_latest_roadmap now 404s rather than
+    leaking the internal container and its INTERNAL_ONLY items."""
     r = client.get("/api/roadmaps/latest", params={"workspace_id": 1000},
                    headers=clientA_headers())
-    assert r.status_code == 200
-    body = r.json()
-    # The returned roadmap object itself must be client-visible.
-    assert body is None or body.get("visibility") in (
-        "CLIENT_VISIBLE", "APPROVED", "CLIENT_SHARED", None
-    )
-    # And none of its items may be INTERNAL_ONLY.
-    for item in (body or {}).get("items", []) or []:
-        assert item.get("visibility") != "INTERNAL_ONLY"
+    assert r.status_code == 404
 
 
 def test_roadmaps_latest_cross_org_not_found(client):
