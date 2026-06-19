@@ -88,13 +88,29 @@ def get_organization_context(
         OrganizationUser.organization_id == x_organization_id,
         OrganizationUser.user_id == current_user.id
     ).first()
-    
+
+    # Syner Crew consult ACROSS clients: they may enter any organization even
+    # without an explicit membership row. Their real membership role is honoured
+    # where it exists (e.g. in the Syner org); otherwise they act as SYNER_PARTNER
+    # on the client. CLIENT_USERs still require explicit membership.
+    if not org_user and current_user.user_type == "SYNER_CREW":
+        org = db.query(Organization).filter(Organization.id == x_organization_id).first()
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        return OrganizationUser(
+            organization_id=x_organization_id,
+            user_id=current_user.id,
+            role="SYNER_PARTNER",
+            organization=org,
+            user=current_user,
+        )
+
     if not org_user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this organization"
         )
-        
+
     return org_user
 
 def get_current_org_id(org_ctx: OrganizationUser = Depends(get_organization_context)) -> int:

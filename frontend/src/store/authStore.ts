@@ -15,6 +15,7 @@ interface Organization {
   id: number;
   name: string;
   slug: string;
+  organization_type?: string; // 'SYNER' (the firm) | 'CLIENT'
 }
 
 interface OrgUserRelation {

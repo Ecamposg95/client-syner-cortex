@@ -16,21 +16,30 @@ def get_user_organizations(
     """
     List all organizations the authenticated user belongs to.
     """
-    # If superadmin, list all organizations
-    if current_user.is_superadmin:
+    # Syner Crew (incl. superadmins) operate across the whole portfolio: they see
+    # the Syner firm org plus every client org, not just rows they're linked to.
+    # Their real membership role is honoured where it exists; otherwise crew act
+    # as SYNER_PARTNER on clients (superadmins keep SUPERADMIN).
+    if current_user.is_superadmin or current_user.user_type == "SYNER_CREW":
+        memberships = {
+            ou.organization_id: ou.role
+            for ou in db.query(OrganizationUser).filter(
+                OrganizationUser.user_id == current_user.id
+            ).all()
+        }
+        default_role = "SUPERADMIN" if current_user.is_superadmin else "SYNER_PARTNER"
         orgs = db.query(Organization).all()
-        # Map to OrganizationUser schema format
         return [
             OrganizationUser(
                 id=o.id,
                 organization_id=o.id,
                 user_id=current_user.id,
-                role="SUPERADMIN",
-                organization=o
+                role=memberships.get(o.id, default_role),
+                organization=o,
             )
             for o in orgs
         ]
-        
+
     org_users = db.query(OrganizationUser).filter(OrganizationUser.user_id == current_user.id).all()
     return org_users
 

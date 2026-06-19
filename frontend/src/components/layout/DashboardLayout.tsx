@@ -29,7 +29,9 @@ import {
   Clock,
   Box,
   Lightbulb,
-  Grid3x3
+  Grid3x3,
+  Star,
+  Search
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -44,6 +46,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
+  const [orgSearch, setOrgSearch] = useState('');
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
   const [showNewWorkspaceModal, setShowNewWorkspaceModal] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -152,6 +155,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const navGroups = isSynerCrew ? crewNavGroups : clientNavGroups;
 
+  // Crew org switcher: separate the Syner firm ("home") from client accounts so
+  // selecting a client reads as "who am I working on", not "which org am I".
+  const synerOrgs = organizations.filter((r) => r.organization?.organization_type === 'SYNER');
+  const clientOrgs = organizations.filter((r) => r.organization?.organization_type !== 'SYNER');
+  const orgQuery = orgSearch.trim().toLowerCase();
+  const filteredClients = orgQuery
+    ? clientOrgs.filter((r) => r.organization.name.toLowerCase().includes(orgQuery))
+    : clientOrgs;
+  const activeIsSyner = currentOrgRelation?.organization?.organization_type === 'SYNER';
+
+  const handleSelectOrg = (orgId: number) => {
+    selectOrganization(orgId);
+    setIsOrgDropdownOpen(false);
+    setOrgSearch('');
+  };
+
   return (
     <div className="min-h-screen flex font-sans" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
 
@@ -221,31 +240,87 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 }}
               >
                 <div className="flex items-center gap-2 truncate">
-                  <Building size={14} style={{ color: 'var(--accent)' }} />
+                  {activeIsSyner
+                    ? <Star size={14} style={{ color: 'var(--accent-strong)' }} fill="currentColor" />
+                    : <Building size={14} style={{ color: 'var(--accent)' }} />}
                   <span className="truncate">{currentOrgRelation?.organization?.name || 'Cargando...'}</span>
                 </div>
                 <ChevronDown size={14} className={`transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--muted-2)' }} />
               </button>
 
               {isOrgDropdownOpen && (
-                <div className="absolute top-full left-4 right-4 rounded-lg shadow-float py-1 z-30 max-h-48 overflow-y-auto"
+                <div className="absolute top-full left-4 right-4 rounded-lg shadow-float z-30 overflow-hidden"
                      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  {organizations.map((relation) => (
-                    <button
-                      key={relation.organization_id}
-                      onClick={() => { selectOrganization(relation.organization_id); setIsOrgDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-[var(--accent-tint)]"
-                      style={{
-                        color: relation.organization_id === currentOrgRelation?.organization_id ? 'var(--accent-strong)' : 'var(--ink-2)',
-                        fontWeight: relation.organization_id === currentOrgRelation?.organization_id ? 600 : 400,
-                      }}
-                    >
-                      {relation.organization.name}
-                      <span className="block font-mono text-[9px] uppercase" style={{ color: 'var(--muted-2)' }}>
-                        {relation.role}
+                  {/* Tu firma (Syner) — pinned home identity */}
+                  {synerOrgs.length > 0 && (
+                    <div className="py-1" style={{ borderBottom: '1px solid var(--border)' }}>
+                      <p className="px-3 pt-1 pb-0.5 font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
+                        Tu firma
+                      </p>
+                      {synerOrgs.map((relation) => {
+                        const active = relation.organization_id === currentOrgRelation?.organization_id;
+                        return (
+                          <button
+                            key={relation.organization_id}
+                            onClick={() => handleSelectOrg(relation.organization_id)}
+                            className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors hover:bg-[var(--accent-tint)]"
+                            style={{ color: active ? 'var(--accent-strong)' : 'var(--ink-2)', fontWeight: active ? 600 : 400 }}
+                          >
+                            <Star size={13} fill="currentColor" style={{ color: 'var(--accent-strong)' }} />
+                            <span className="truncate">{relation.organization.name}</span>
+                            {active && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Clientes — searchable */}
+                  <div className="py-1">
+                    <div className="px-3 pt-1.5 pb-1 flex items-center justify-between">
+                      <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--muted-2)' }}>
+                        Clientes
                       </span>
-                    </button>
-                  ))}
+                      <span className="font-mono text-[9px]" style={{ color: 'var(--muted-2)' }}>{clientOrgs.length}</span>
+                    </div>
+                    {clientOrgs.length > 6 && (
+                      <div className="px-2 pb-1.5">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                          <Search size={12} style={{ color: 'var(--muted-2)' }} />
+                          <input
+                            autoFocus
+                            value={orgSearch}
+                            onChange={(e) => setOrgSearch(e.target.value)}
+                            placeholder="Buscar cliente..."
+                            className="w-full bg-transparent outline-none text-xs"
+                            style={{ color: 'var(--ink)' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="max-h-52 overflow-y-auto">
+                      {filteredClients.length === 0 && (
+                        <p className="px-3 py-2 text-xs italic" style={{ color: 'var(--muted-2)' }}>
+                          {clientOrgs.length === 0 ? 'Sin clientes aún' : 'Sin coincidencias'}
+                        </p>
+                      )}
+                      {filteredClients.map((relation) => {
+                        const active = relation.organization_id === currentOrgRelation?.organization_id;
+                        return (
+                          <button
+                            key={relation.organization_id}
+                            onClick={() => handleSelectOrg(relation.organization_id)}
+                            className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors hover:bg-[var(--accent-tint)]"
+                            style={{ color: active ? 'var(--accent-strong)' : 'var(--ink-2)', fontWeight: active ? 600 : 400 }}
+                          >
+                            <Building size={13} style={{ color: 'var(--accent)' }} />
+                            <span className="truncate">{relation.organization.name}</span>
+                            {active && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--accent)' }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </>
