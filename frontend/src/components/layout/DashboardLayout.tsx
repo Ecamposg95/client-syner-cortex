@@ -31,7 +31,11 @@ import {
   Lightbulb,
   Grid3x3,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  FileText,
+  MessageSquare,
+  Stethoscope,
+  Files
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -115,6 +119,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         { name: 'Findings',     path: '/findings',        icon: FileSearch },
         { name: 'Insights',     path: '/insights',        icon: Lightbulb },
         { name: 'Initiatives',  path: '/initiatives',     icon: Milestone },
+      ]
+    },
+    {
+      title: 'Consultoría',
+      items: [
+        { name: 'Documentos',   path: '/vault',       icon: Files },
+        { name: 'Cortex Chat',  path: '/chat',        icon: MessageSquare },
+        { name: 'Diagnóstico',  path: '/diagnose',    icon: Stethoscope },
+        { name: 'Toolkits',     path: '/toolkits',    icon: Box },
+        { name: 'Reportes',     path: '/reports',     icon: FileText },
       ]
     },
     {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../../ui/Card';
-import { CheckCircle, ArrowLeft, Loader2, Save, FileJson } from 'lucide-react';
+import { CheckCircle, ArrowLeft, Loader2, Save, FileJson, Share2 } from 'lucide-react';
 import apiClient from '../../../api/client';
 import { useAuthStore } from '../../../store/authStore';
 
@@ -58,6 +58,21 @@ export const ToolRunReviewPage: React.FC = () => {
     }
   };
 
+  const handleShare = async () => {
+    setError(null);
+    setSaving(true);
+    try {
+      // Crew-only transition gated by SHARE_WITH_CLIENT in the backend.
+      await apiClient.patch(`/tool-runs/${runId}/status`, { status: 'CLIENT_SHARED' });
+      setRun({ ...run, status: 'CLIENT_SHARED' });
+      alert('Entregable compartido con el cliente. Ahora es visible en su portal.');
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || 'No se pudo compartir con el cliente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-12 flex justify-center">
@@ -84,16 +99,35 @@ export const ToolRunReviewPage: React.FC = () => {
           <p className="text-sm text-[var(--muted)] mt-1">Ajusta el output generado de "{run.tool_name}" antes de entregarlo.</p>
         </div>
         
-        {user?.user_type === 'SYNER_CREW' && run.status !== 'APPROVED' && (
-          <button
-            onClick={handleSaveAndApprove}
-            disabled={saving}
-            className="px-4 py-2 text-sm font-semibold bg-green-500 text-white rounded-lg hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
-          >
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-            Guardar y Aprobar
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {user?.user_type === 'SYNER_CREW' && run.status !== 'APPROVED' && run.status !== 'CLIENT_SHARED' && (
+            <button
+              onClick={handleSaveAndApprove}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-semibold bg-green-500 text-white rounded-lg hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+              Guardar y Aprobar
+            </button>
+          )}
+          {/* Once approved, crew can push the deliverable to the client portal. */}
+          {user?.user_type === 'SYNER_CREW' && run.status === 'APPROVED' && (
+            <button
+              onClick={handleShare}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
+              style={{ background: 'var(--accent)' }}
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
+              Compartir con cliente
+            </button>
+          )}
+          {run.status === 'CLIENT_SHARED' && (
+            <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--accent-tint,rgba(37,99,235,0.1))] text-[var(--accent-strong)] flex items-center gap-1.5">
+              <Share2 size={13} /> Compartido con el cliente
+            </span>
+          )}
+        </div>
       </div>
 
       {error && (
