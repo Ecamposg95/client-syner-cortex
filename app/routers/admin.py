@@ -13,10 +13,14 @@ from app.models.models import (
     Organization, OrganizationUser, User, Module, OrganizationModule, Workspace
 )
 from app.security.auth import get_password_hash
+from app.policy import roles
+from app.policy.validation import validate_org_role
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-CLIENT_ROLES = {"CLIENT_OWNER", "CLIENT_EXECUTIVE", "CLIENT_MANAGER", "CLIENT_VIEWER"}
+# Canonical client roles (Task Pack §5). Sourced from app.policy.roles so the
+# set can't drift (it previously omitted CLIENT_CONTRIBUTOR).
+CLIENT_ROLES = set(roles.CLIENT_ROLES)
 
 
 # ─────────────────────────── Schemas ───────────────────────────
@@ -65,6 +69,11 @@ def _unique_slug(db: Session, name: str) -> str:
 
 def _create_client_user(db: Session, org_id: int, email: str, full_name: Optional[str],
                         role: str, password: Optional[str]) -> dict:
+    # Must be a canonical role (Task Pack §5) — and specifically a client role.
+    try:
+        validate_org_role(role)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if role not in CLIENT_ROLES:
         raise HTTPException(status_code=400, detail=f"Role must be one of {sorted(CLIENT_ROLES)}")
     if db.query(User).filter(User.email == email).first():

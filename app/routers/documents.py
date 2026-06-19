@@ -130,19 +130,21 @@ def upload_document(
         raise HTTPException(status_code=500, detail=f"Could not save file locally: {e}")
 
     # Create document db entry.
-    # NOTE: visibility keeps the model default (INTERNAL_ONLY) — behaviour-preserving.
-    # TODO(visibility): once Document gains an `uploaded_by` column, a client upload
-    # should be stamped CLIENT_UPLOAD with uploaded_by=principal.user_id so the
-    # uploader can see it back through scoped_query (own-only state). Without that
-    # column, own-only states cannot be matched and client uploads stay invisible
-    # to the uploader on read — see list_workspace_documents below.
+    # Eje 3 (own-only): stamp the uploader so scoped_query can match the own-only
+    # CLIENT_UPLOAD state on read. A client upload lands as CLIENT_UPLOAD (visible
+    # back only to its uploader); a crew upload keeps the internal default
+    # (INTERNAL_ONLY), preserving prior crew behaviour. A crew member can still
+    # later expose it to the client via the /share endpoint (CLIENT_SHARED).
+    visibility = "CLIENT_UPLOAD" if principal.is_client else "INTERNAL_ONLY"
     document = Document(
         workspace_id=workspace_id,
         organization_id=org_id,
         name=filename,
         file_type=file_ext,
         file_path=file_path,
-        status="PROCESSING"
+        status="PROCESSING",
+        visibility=visibility,
+        uploaded_by=principal.user_id,
     )
     db.add(document)
     db.commit()
@@ -178,10 +180,9 @@ def list_workspace_documents(
     Crew/superadmin see everything in scope. Previously this returned every row
     in the workspace regardless of visibility — that leak is now closed.
 
-    TODO(visibility): owner_column=None because Document has no `uploaded_by`
-    column today, so the CLIENT_UPLOAD own-only state cannot be matched and a
-    client's own uploads are not yet returned here. Add `uploaded_by` and pass
-    owner_column=Document.uploaded_by to include them.
+    owner_column=Document.uploaded_by wires the CLIENT_UPLOAD own-only state: a
+    client also sees the documents it uploaded itself (uploaded_by == its id), but
+    never another user's CLIENT_UPLOAD, on top of the shared CLIENT_SHARED set.
     """
     # Verify workspace belongs to org (Eje 1 scope check)
     workspace = db.query(Workspace).filter(
@@ -194,7 +195,7 @@ def list_workspace_documents(
     q = scoped_query(
         db, Document, principal, org_id,
         object_type=ObjectType.DOCUMENT,
-        owner_column=None,  # TODO: Document.uploaded_by once it exists
+        owner_column=Document.uploaded_by,
     )
     return q.filter(Document.workspace_id == workspace_id).all()
 

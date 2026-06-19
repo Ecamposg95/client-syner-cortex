@@ -108,6 +108,10 @@ class Document(Base):
     file_path = Column(String, nullable=False)
     status = Column(String, default="PROCESSING") # PROCESSING, COMPLETED, FAILED
     visibility = Column(String, default="INTERNAL_ONLY") # INTERNAL_ONLY, CLIENT_SHARED, CLIENT_UPLOAD
+    # Uploader (Eje 3 own-only): the user who uploaded this document. Nullable so
+    # pre-existing rows in prod don't break; SET NULL keeps the doc if the user is
+    # deleted. A client only sees its own CLIENT_UPLOAD docs (uploaded_by == self).
+    uploaded_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

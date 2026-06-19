@@ -15,6 +15,10 @@ import app.models.toolkit      # noqa: F401
 import app.models.survey       # noqa: F401
 import app.models.insight      # noqa: F401
 import app.models.raci         # noqa: F401
+import app.models.report        # noqa: F401
+import app.models.recommendation  # noqa: F401
+import app.models.workspace_user  # noqa: F401
+import app.models.comment       # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

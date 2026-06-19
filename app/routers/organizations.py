@@ -9,6 +9,7 @@ from app.dependencies import (
 )
 from app.policy import Action
 from app.policy.deps import require_action
+from app.policy.validation import assert_assignable
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
@@ -132,6 +133,9 @@ def add_user_to_organization(
 
     if existing:
         raise HTTPException(status_code=400, detail="User is already a member of this organization.")
+
+    # Validate the incoming role against the canonical set (Task Pack §5).
+    assert_assignable(member_in.role)
 
     org_user = OrganizationUser(
         organization_id=organization_id,
