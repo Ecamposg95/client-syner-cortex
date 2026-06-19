@@ -42,6 +42,16 @@ def client_visible_states(object_type: ObjectType) -> frozenset[str]:
     return CLIENT_VISIBLE_STATES.get(object_type, frozenset())
 
 
+def own_only_states(object_type: ObjectType) -> frozenset[str]:
+    """States a client sees only for objects they own (e.g. their own upload)."""
+    return _OWN_ONLY_STATES.get(object_type, frozenset())
+
+
+def executive_only_states(object_type: ObjectType) -> frozenset[str]:
+    """States gated to the client executive tier (OWNER/EXECUTIVE)."""
+    return _EXECUTIVE_ONLY_STATES.get(object_type, frozenset())
+
+
 def is_visible(
     principal,
     object_type: ObjectType,
