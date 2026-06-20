@@ -7,7 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.database import engine
 from app.security.ratelimit import limiter
-from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi, clevel, toolkit, surveys, public_surveys, admin, portal, insights, raci
+from app.routers import auth, organizations, workspaces, documents, chat, diagnoses, roadmaps, reports, audit, agents, kpi, clevel, toolkit, surveys, public_surveys, admin, portal, insights, raci, playbooks, portfolio
 
 # Schema is managed by Alembic (`alembic upgrade head`), not create_all.
 # Reference data + the initial crew admin are provisioned explicitly via
@@ -56,6 +56,8 @@ app.include_router(raci.router, prefix="/api")
 # Audit was imported but never mounted — now exposed behind require_action(VIEW_AUDIT)
 # (SYNER_ADMIN only). Must stay before the SPA catch-all route below.
 app.include_router(audit.router, prefix="/api")
+app.include_router(playbooks.router, prefix="/api")
+app.include_router(portfolio.router, prefix="/api")
 
 @app.get("/api/health", tags=["health"])
 def health_check():

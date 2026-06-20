@@ -35,7 +35,10 @@ import {
   FileText,
   MessageSquare,
   Stethoscope,
-  Files
+  Files,
+  Users,
+  Gauge,
+  Layers
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -102,8 +105,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     {
       title: 'Práctica',
       items: [
-        { name: 'Clientes',    path: '/admin/clients',   icon: Building2 },
-        { name: 'Toolkits',    path: '/toolkits',        icon: Box },
+        { name: 'Command Center', path: '/command-center', icon: Gauge },
+        { name: 'Clientes',       path: '/admin/clients',  icon: Building2 },
+        { name: 'Toolkits',       path: '/toolkits',       icon: Box },
+        { name: 'Playbooks',      path: '/playbooks',      icon: BookOpen },
+      ]
+    },
+    {
+      title: 'Firma',
+      items: [
+        { name: 'Usuarios',    path: '/admin/users',    icon: Users },
+        { name: 'Módulos',     path: '/admin/modules',  icon: Layers },
       ]
     }
   ];

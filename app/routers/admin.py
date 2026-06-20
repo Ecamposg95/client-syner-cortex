@@ -52,6 +52,18 @@ class WorkspaceCreateIn(BaseModel):
     description: Optional[str] = None
 
 
+class ModuleCreate(BaseModel):
+    code: str
+    name: str
+    description: Optional[str] = None
+
+
+class ModuleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    code: Optional[str] = None
+
+
 # ─────────────────────────── Helpers ───────────────────────────
 def _gen_temp_password() -> str:
     return secrets.token_urlsafe(9)
@@ -221,3 +233,95 @@ def create_client_workspace(org_id: int, data: WorkspaceCreateIn, db: Session = 
     db.refresh(ws)
     return {"id": ws.id, "name": ws.name, "description": ws.description,
             "organization_id": ws.organization_id, "created_at": ws.created_at}
+
+
+# ─────────────────── Firm-wide governance (users + modules) ───────────────────
+@router.get("/users")
+def list_users(db: Session = Depends(get_db), _crew: User = Depends(get_current_syner_crew)):
+    """Every user of the firm, cross-org. For each user we attach the list of
+    organizations they belong to and the role they hold in each. Crew-only."""
+    users = db.query(User).order_by(User.email).all()
+    # One pass over the membership table, joined to organizations, so we avoid
+    # an N+1 query per user.
+    memberships = (
+        db.query(OrganizationUser, Organization)
+        .join(Organization, OrganizationUser.organization_id == Organization.id)
+        .all()
+    )
+    orgs_by_user: dict[int, list] = {}
+    for ou, org in memberships:
+        orgs_by_user.setdefault(ou.user_id, []).append({
+            "organization_id": org.id,
+            "org_name": org.name,
+            "organization_type": org.organization_type,
+            "role": ou.role,
+        })
+
+    return [
+        {
+            "id": u.id,
+            "email": u.email,
+            "full_name": u.full_name,
+            "user_type": u.user_type,
+            "is_active": u.is_active,
+            "is_superadmin": u.is_superadmin,
+            "orgs": orgs_by_user.get(u.id, []),
+        }
+        for u in users
+    ]
+
+
+@router.get("/modules")
+def list_modules(db: Session = Depends(get_db), _crew: User = Depends(get_current_syner_crew)):
+    """The global Module catalog. Crew-only."""
+    modules = db.query(Module).order_by(Module.code).all()
+    return [
+        {"id": m.id, "code": m.code, "name": m.name, "description": m.description}
+        for m in modules
+    ]
+
+
+@router.post("/modules", status_code=status.HTTP_201_CREATED)
+def create_module(data: ModuleCreate, db: Session = Depends(get_db),
+                  _crew: User = Depends(get_current_syner_crew)):
+    """Create a catalog Module. Crew-only (crew or superadmin via the dep)."""
+    code = data.code.strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="Module code is required")
+    if not data.name.strip():
+        raise HTTPException(status_code=400, detail="Module name is required")
+    if db.query(Module).filter(Module.code == code).first():
+        raise HTTPException(status_code=400, detail=f"A module with code '{code}' already exists.")
+    module = Module(code=code, name=data.name.strip(),
+                    description=(data.description or None))
+    db.add(module)
+    db.commit()
+    db.refresh(module)
+    return {"id": module.id, "code": module.code, "name": module.name,
+            "description": module.description}
+
+
+@router.put("/modules/{module_id}")
+def update_module(module_id: int, data: ModuleUpdate, db: Session = Depends(get_db),
+                  _crew: User = Depends(get_current_syner_crew)):
+    """Edit a catalog Module (name/description, and optionally code). Crew-only."""
+    module = db.query(Module).filter(Module.id == module_id).first()
+    if not module:
+        raise HTTPException(status_code=404, detail="Module not found")
+    if data.code is not None:
+        new_code = data.code.strip()
+        if not new_code:
+            raise HTTPException(status_code=400, detail="Module code cannot be empty")
+        if new_code != module.code and db.query(Module).filter(Module.code == new_code).first():
+            raise HTTPException(status_code=400, detail=f"A module with code '{new_code}' already exists.")
+        module.code = new_code
+    if data.name is not None:
+        if not data.name.strip():
+            raise HTTPException(status_code=400, detail="Module name cannot be empty")
+        module.name = data.name.strip()
+    if data.description is not None:
+        module.description = data.description or None
+    db.commit()
+    db.refresh(module)
+    return {"id": module.id, "code": module.code, "name": module.name,
+            "description": module.description}
