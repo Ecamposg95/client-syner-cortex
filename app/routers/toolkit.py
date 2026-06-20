@@ -11,7 +11,7 @@ from app.models.toolkit import (
     ToolOutput, ToolRecommendation, ToolExport, ToolRunStatus, Visibility
 )
 from app.policy import Action, ObjectType
-from app.policy.deps import get_principal, require_action
+from app.policy.deps import get_principal, require_action, scoped_query
 from app.policy.engine import authorize, can_view
 from app.policy.principal import Principal
 from app.schemas.toolkit import (
@@ -137,6 +137,58 @@ def execute_tool_run(
     if not run:
         raise HTTPException(status_code=404, detail="ToolRun not found")
     return {"id": run.id, "status": run.status.value}
+
+@router.get("/tool-runs", tags=["toolkit"])
+def list_tool_runs(
+    workspace_id: int | None = None,
+    status: str | None = None,
+    tool_id: int | None = None,
+    db: Session = Depends(get_db),
+    org_id: int = Depends(get_current_org_id),
+    principal: Principal = Depends(get_principal),
+):
+    """List ToolRuns for the active org (history).
+
+    Eje 1: scoped to ``org_id`` (validated by ``get_current_org_id``).
+    Eje 3: ``scoped_query`` narrows a CLIENT_USER to CLIENT_SHARED runs only;
+    crew/superadmin see every run of the org. Optional filters: ``workspace_id``,
+    ``status`` (ToolRunStatus name or value) and ``tool_id``.
+
+    NOTE: the explicit "/tool-runs" path takes precedence and never collides
+    with the parametrized "/tool-runs/{run_id}" route below.
+    """
+    q = scoped_query(db, ToolRun, principal, org_id, object_type=ObjectType.TOOLRUN)
+
+    if workspace_id is not None:
+        q = q.filter(ToolRun.workspace_id == workspace_id)
+    if tool_id is not None:
+        q = q.filter(ToolRun.tool_id == tool_id)
+    if status is not None:
+        # Accept either the enum name or its value (here they coincide), and
+        # reject unknown statuses with 400 rather than silently returning [].
+        try:
+            status_enum = ToolRunStatus[status]
+        except KeyError:
+            try:
+                status_enum = ToolRunStatus(status)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid status")
+        q = q.filter(ToolRun.status == status_enum)
+
+    runs = q.options(joinedload(ToolRun.tool)).order_by(ToolRun.created_at.desc()).all()
+    return [
+        {
+            "id": run.id,
+            "tool_id": run.tool_id,
+            "tool_name": run.tool.name if run.tool else "",
+            "status": run.status.value if run.status else "DRAFT",
+            "visibility": run.visibility.value if run.visibility else "INTERNAL_ONLY",
+            "workspace_id": run.workspace_id,
+            "created_at": run.created_at,
+        }
+        for run in runs
+    ]
+
 
 @router.get("/tool-runs/{run_id}", tags=["toolkit"])
 def get_tool_run(

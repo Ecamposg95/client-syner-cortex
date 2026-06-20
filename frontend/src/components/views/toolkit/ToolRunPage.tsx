@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../../ui/Card';
 import {
   Bot, Save, Play, CheckCircle, Loader2, ArrowLeft, PenTool,
-  Download, AlertCircle, Plus
+  Download, AlertCircle, Plus, Lightbulb, Server
 } from 'lucide-react';
 import apiClient from '../../../api/client';
 import { useAuthStore } from '../../../store/authStore';
@@ -23,6 +23,13 @@ interface ToolDetail {
   } | null;
 }
 
+interface Recommendation {
+  id: number;
+  title: string;
+  description: string | null;
+  created_at?: string;
+}
+
 export const ToolRunPage: React.FC = () => {
   const { toolId } = useParams();
   const navigate = useNavigate();
@@ -36,6 +43,16 @@ export const ToolRunPage: React.FC = () => {
   const [inputFields, setInputFields] = useState<Record<string, string>>({});
   const [outputData, setOutputData] = useState<any>(null);
   const [currentRunId, setCurrentRunId] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  // Recommendations panel state
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+  const [recTitle, setRecTitle] = useState('');
+  const [recDescription, setRecDescription] = useState('');
+  const [savingRec, setSavingRec] = useState(false);
+
+  const isCrew = user?.user_type === 'SYNER_CREW';
 
   // Parse input field names from the user_prompt_template
   const parseInputFields = (template: string): string[] => {
@@ -95,6 +112,9 @@ export const ToolRunPage: React.FC = () => {
       if (detailRes.data.outputs && detailRes.data.outputs.length > 0) {
         setOutputData(detailRes.data.outputs[0].content_json);
       }
+
+      // 5. Load any recommendations attached to this run
+      fetchRecommendations(runId);
     } catch (e) {
       console.error(e);
       alert('Error al generar el entregable.');
@@ -109,15 +129,73 @@ export const ToolRunPage: React.FC = () => {
     }
   };
 
-  const handleExportMarkdown = () => {
-    if (!outputData || !tool) return;
-    const md = jsonToMarkdown(tool.name, outputData);
+  const downloadMarkdown = (md: string) => {
+    const safeName = (tool?.name || 'entregable').replace(/\s+/g, '_');
     const blob = new Blob([md], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${tool.name.replace(/\s+/g, '_')}.md`;
+    a.download = `${safeName}.md`;
     a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Local fallback export (client-side JSON → Markdown).
+  const handleExportMarkdown = () => {
+    if (!outputData || !tool) return;
+    downloadMarkdown(jsonToMarkdown(tool.name, outputData));
+  };
+
+  // Real export: ask the backend to render the Markdown and download it.
+  const handleExportServer = async () => {
+    if (!currentRunId) return;
+    setExporting(true);
+    try {
+      const res = await apiClient.post(`/tool-runs/${currentRunId}/export-markdown`);
+      const md = res.data?.markdown;
+      if (md) {
+        downloadMarkdown(md);
+      } else {
+        alert('El servidor no devolvió contenido para exportar.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error al exportar desde el servidor.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ─── Recommendations ────────────────────────────────────────────
+  const fetchRecommendations = async (runId: number) => {
+    setLoadingRecs(true);
+    try {
+      const res = await apiClient.get(`/tool-runs/${runId}/recommendations`);
+      setRecommendations(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
+
+  const handleAddRecommendation = async () => {
+    if (!currentRunId || !recTitle.trim()) return;
+    setSavingRec(true);
+    try {
+      await apiClient.post(`/tool-runs/${currentRunId}/recommendations`, {
+        title: recTitle.trim(),
+        description: recDescription.trim(),
+      });
+      setRecTitle('');
+      setRecDescription('');
+      await fetchRecommendations(currentRunId);
+    } catch (e) {
+      console.error(e);
+      alert('No se pudo agregar la recomendación.');
+    } finally {
+      setSavingRec(false);
+    }
   };
 
   if (loading) {
@@ -162,6 +240,16 @@ export const ToolRunPage: React.FC = () => {
           {outputData && (
             <button onClick={handleExportMarkdown} className="px-4 py-2 text-sm font-semibold border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] flex items-center gap-2">
               <Download size={16} /> Exportar MD
+            </button>
+          )}
+          {outputData && (
+            <button
+              onClick={handleExportServer}
+              disabled={!currentRunId || exporting}
+              className="px-4 py-2 text-sm font-semibold border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] flex items-center gap-2 disabled:opacity-50"
+            >
+              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Server size={16} />}
+              Exportar (servidor)
             </button>
           )}
           {status === 'AI_GENERATED' && user?.user_type === 'SYNER_CREW' && (
@@ -230,6 +318,70 @@ export const ToolRunPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Recommendations panel — visible once an output exists for this run */}
+      {outputData && currentRunId && (
+        <div className="space-y-4">
+          <h3 className="font-bold text-lg text-[var(--ink-2)] flex items-center gap-2">
+            <Lightbulb size={18} className="text-[var(--accent)]" /> Recomendaciones
+          </h3>
+          <Card className="p-5 space-y-4">
+            {loadingRecs ? (
+              <div className="flex justify-center py-4">
+                <Loader2 size={20} className="animate-spin text-[var(--accent)]" />
+              </div>
+            ) : recommendations.length === 0 ? (
+              <p className="text-sm text-[var(--muted)] italic">
+                Aún no hay recomendaciones para esta ejecución.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {recommendations.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-3 rounded-lg bg-[var(--surface-2)] border-l-4 border-[var(--accent)] text-sm"
+                  >
+                    <strong className="text-[var(--ink)]">{rec.title}</strong>
+                    {rec.description && (
+                      <p className="text-[var(--muted)] mt-0.5">{rec.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {isCrew && (
+              <div className="pt-4 border-t border-[var(--border)] space-y-3">
+                <p className="text-[10px] uppercase font-bold tracking-wide text-[var(--muted-2)]">
+                  Agregar recomendación
+                </p>
+                <input
+                  type="text"
+                  className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--accent)] transition-colors"
+                  placeholder="Título"
+                  value={recTitle}
+                  onChange={(e) => setRecTitle(e.target.value)}
+                />
+                <textarea
+                  rows={2}
+                  className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--accent)] transition-colors resize-none"
+                  placeholder="Descripción (opcional)"
+                  value={recDescription}
+                  onChange={(e) => setRecDescription(e.target.value)}
+                />
+                <button
+                  onClick={handleAddRecommendation}
+                  disabled={savingRec || !recTitle.trim()}
+                  className="px-4 py-2 text-sm font-semibold bg-[var(--accent)] text-white rounded-lg hover:opacity-90 flex items-center gap-2 disabled:opacity-50 transition-opacity"
+                >
+                  {savingRec ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                  Agregar
+                </button>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

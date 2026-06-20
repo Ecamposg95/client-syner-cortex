@@ -144,6 +144,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         { name: 'Cortex Chat',  path: '/chat',        icon: MessageSquare },
         { name: 'Diagnóstico',  path: '/diagnose',    icon: Stethoscope },
         { name: 'Toolkits',     path: '/toolkits',    icon: Box },
+        { name: 'Historial Tools', path: '/tool-runs', icon: Clock },
         { name: 'Brief Ejecutivo', path: '/reports',  icon: FileText },
       ]
     },

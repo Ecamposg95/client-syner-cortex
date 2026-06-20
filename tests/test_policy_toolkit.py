@@ -362,3 +362,78 @@ def test_crew_in_org_b_can_see_b_run(client):
     r = client.get(f"/api/tool-runs/{RUN_B_SHARED}", headers=crew_headers(ORG_B))
     assert r.status_code == 200
     assert r.json()["id"] == RUN_B_SHARED
+
+
+# =========================================================================== #
+# 6. GET /tool-runs (list / history)
+# =========================================================================== #
+
+def test_list_tool_runs_requires_auth(client):
+    """No token -> 401 on the list endpoint."""
+    r = client.get("/api/tool-runs")
+    assert r.status_code == 401
+
+
+def test_crew_lists_all_runs_of_scoped_org(client):
+    """Crew scoped to org A sees every org-A run (INTERNAL + SHARED) and no
+    runs from org B."""
+    r = client.get("/api/tool-runs", headers=crew_headers(ORG_A))
+    assert r.status_code == 200
+    body = r.json()
+    ids = {item["id"] for item in body}
+    # Both org-A runs are present...
+    assert RUN_A_INTERNAL in ids
+    assert RUN_A_SHARED in ids
+    # ...and neither org-B run leaks in.
+    assert RUN_B_INTERNAL not in ids
+    assert RUN_B_SHARED not in ids
+    # Contract: every item carries the documented fields.
+    sample = next(i for i in body if i["id"] == RUN_A_INTERNAL)
+    assert set(sample.keys()) == {
+        "id", "tool_id", "tool_name", "status", "visibility",
+        "workspace_id", "created_at",
+    }
+    assert sample["tool_name"] == "FODA Ejecutivo"
+    assert sample["visibility"] == "INTERNAL_ONLY"
+
+
+def test_list_runs_ordered_created_at_desc(client):
+    """Newest run first (RUN_A_SHARED is 2024-02, RUN_A_INTERNAL is 2024-01)."""
+    r = client.get("/api/tool-runs", headers=crew_headers(ORG_A))
+    assert r.status_code == 200
+    a_ids = [i["id"] for i in r.json() if i["id"] in (RUN_A_INTERNAL, RUN_A_SHARED)]
+    assert a_ids == [RUN_A_SHARED, RUN_A_INTERNAL]
+
+
+def test_client_lists_only_shared_runs_of_own_org(client):
+    """A CLIENT_USER of org A only sees CLIENT_SHARED runs (not INTERNAL_ONLY)."""
+    r = client.get("/api/tool-runs", headers=clientA_headers())
+    assert r.status_code == 200
+    ids = {item["id"] for item in r.json()}
+    assert RUN_A_SHARED in ids
+    assert RUN_A_INTERNAL not in ids
+    # And nothing from org B.
+    assert RUN_B_SHARED not in ids
+    assert RUN_B_INTERNAL not in ids
+
+
+def test_list_runs_filter_by_status(client):
+    """Filtering by status narrows the result set (crew, org A)."""
+    # Only the CLIENT_SHARED-status run of org A matches.
+    r = client.get("/api/tool-runs?status=CLIENT_SHARED", headers=crew_headers(ORG_A))
+    assert r.status_code == 200
+    ids = {item["id"] for item in r.json()}
+    assert ids == {RUN_A_SHARED}
+
+    # The AI_GENERATED status matches only the internal org-A run.
+    r2 = client.get("/api/tool-runs?status=AI_GENERATED", headers=crew_headers(ORG_A))
+    assert r2.status_code == 200
+    ids2 = {item["id"] for item in r2.json()}
+    assert ids2 == {RUN_A_INTERNAL}
+
+
+def test_list_runs_filter_by_tool_id(client):
+    """Filtering by a non-existent tool_id returns an empty list."""
+    r = client.get(f"/api/tool-runs?tool_id={TOOL_ID + 999}", headers=crew_headers(ORG_A))
+    assert r.status_code == 200
+    assert r.json() == []

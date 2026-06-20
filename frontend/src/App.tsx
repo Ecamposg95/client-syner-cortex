@@ -16,6 +16,7 @@ import { ToolsPage } from './components/views/toolkit/ToolsPage';
 import { ToolRunPage } from './components/views/toolkit/ToolRunPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { ToolRunReviewPage } from './components/views/toolkit/ToolRunReviewPage';
+import { ToolRunHistoryPage } from './components/views/toolkit/ToolRunHistoryPage';
 import { Changelog } from './components/views/Changelog';
 import { KPIs } from './components/views/KPIs';
 import { RoadmapView } from './components/views/RoadmapView';
@@ -268,6 +269,7 @@ export const App: React.FC = () => {
         <Route path="/recommendations" element={<PrivateRoute><RecommendationsView /></PrivateRoute>} />
         <Route path="/report-hub" element={<PrivateRoute><ReportsHubView /></PrivateRoute>} />
         <Route path="/config" element={<PrivateRoute><ConfigView /></PrivateRoute>} />
+        <Route path="/tool-runs" element={<PrivateRoute><ToolRunHistoryPage /></PrivateRoute>} />
         <Route
           path="/admin/clients"
           element={
