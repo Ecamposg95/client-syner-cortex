@@ -37,6 +37,9 @@ import { PlaybooksView } from './components/views/PlaybooksView';
 import { CommandCenterView } from './components/views/CommandCenterView';
 import { AdminUsersView } from './components/views/admin/AdminUsersView';
 import { AdminModulesView } from './components/views/admin/AdminModulesView';
+import { RecommendationsView } from './components/views/RecommendationsView';
+import { ReportsHubView } from './components/views/ReportsHubView';
+import { ConfigView } from './components/views/ConfigView';
 
 // Guard component for authenticated private views
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -262,6 +265,9 @@ export const App: React.FC = () => {
         <Route path="/command-center" element={<PrivateRoute><CommandCenterView /></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute><AdminUsersView /></PrivateRoute>} />
         <Route path="/admin/modules" element={<PrivateRoute><AdminModulesView /></PrivateRoute>} />
+        <Route path="/recommendations" element={<PrivateRoute><RecommendationsView /></PrivateRoute>} />
+        <Route path="/report-hub" element={<PrivateRoute><ReportsHubView /></PrivateRoute>} />
+        <Route path="/config" element={<PrivateRoute><ConfigView /></PrivateRoute>} />
         <Route
           path="/admin/clients"
           element={

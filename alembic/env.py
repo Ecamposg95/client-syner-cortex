@@ -20,6 +20,7 @@ import app.models.recommendation  # noqa: F401
 import app.models.workspace_user  # noqa: F401
 import app.models.comment       # noqa: F401
 import app.models.playbook       # noqa: F401
+import app.models.app_setting     # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

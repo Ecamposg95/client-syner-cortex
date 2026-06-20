@@ -38,7 +38,8 @@ import {
   Files,
   Users,
   Gauge,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -116,6 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       items: [
         { name: 'Usuarios',    path: '/admin/users',    icon: Users },
         { name: 'Módulos',     path: '/admin/modules',  icon: Layers },
+        { name: 'Configuración', path: '/config',       icon: Settings },
       ]
     }
   ];
@@ -131,6 +133,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         { name: 'Findings',     path: '/findings',        icon: FileSearch },
         { name: 'Insights',     path: '/insights',        icon: Lightbulb },
         { name: 'Initiatives',  path: '/initiatives',     icon: Milestone },
+        { name: 'Recommendations', path: '/recommendations', icon: Sparkles },
+        { name: 'Reportes',     path: '/report-hub',      icon: FileText },
       ]
     },
     {
@@ -140,7 +144,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         { name: 'Cortex Chat',  path: '/chat',        icon: MessageSquare },
         { name: 'Diagnóstico',  path: '/diagnose',    icon: Stethoscope },
         { name: 'Toolkits',     path: '/toolkits',    icon: Box },
-        { name: 'Reportes',     path: '/reports',     icon: FileText },
+        { name: 'Brief Ejecutivo', path: '/reports',  icon: FileText },
       ]
     },
     {
